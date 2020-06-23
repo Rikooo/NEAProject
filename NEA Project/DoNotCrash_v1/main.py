@@ -63,10 +63,14 @@ def mainMenu():
                     options_button.text_colour, options_button.text_size = ORANGE, 75
                     quit_button.text_colour, quit_button.text_size = ORANGE, 75
 
+            # HANDLING --------------------------------------------------------------------#
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Handles what to do after the user clicks on the corresponding button
                 if play_game_button.mouseOver(pos):
-                    running = False
+                    # This avoids the current state of whatever menu system overriding the intended menu
+                    # For example before this, when the user would pause the game and exit to main menu then click play game,
+                    # They would immidiately arrive at the pause screen an not the actual game hence the use of a default parameter
+                    main = Main(initial_run=False)
                 elif choose_car_button.mouseOver(pos):
                     chooseCarMenu()
                 elif options_button.mouseOver(pos):
@@ -115,6 +119,7 @@ def chooseCarMenu():
                     main_menu_button.text_colour, main_menu_button.text_size = NEON_GREEN, 60
                     quit_button.text_colour, quit_button.text_size = NEON_GREEN, 60
 
+            # HANDLING --------------------------------------------------------------------#
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Handles what to do after the user clicks on the corresponding button
                 if play_button.mouseOver(pos):
@@ -174,6 +179,7 @@ def pauseMenu():
                     main_menu_button.text_colour, main_menu_button.text_size = ORANGE, 60
                     quit_button.text_colour, quit_button.text_size = ORANGE, 90
 
+            # HANDLING --------------------------------------------------------------------#
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Handles what to do after the user clicks on the corresponding button
                 if resume_button.mouseOver(pos):
@@ -197,7 +203,7 @@ def pauseMenu():
 class Main:
     """ Class controls the entire program """
 
-    def __init__(self):
+    def __init__(self, initial_run=True):
         # Initialisations ----------------------------------------------------------------------#
         self.FPS = 60
         self.clock = pygame.time.Clock()
@@ -206,17 +212,16 @@ class Main:
         pygame.display.set_caption('Do Not Crash!')
         pygame.display.set_icon(game_icon_image)
 
-        # Runs Main Method ---------------------------------------------------------------------#
+        # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
-        self.initial_run = True
+        self.initial_run = initial_run
         self.run()
 
-    def run(self):
+    def run(self, running=False):
         # Main game loop
         while self.running:
             if self.initial_run:
-                mainMenu()
-                self.initial_run = False
+                mainMenu()  # The function makes initial run = False otherwise the saved state will carry on between menu screens
 
             # Placeholder as map is not created yet
             GAME_DISPLAY.fill((0, 0, 90))
@@ -233,7 +238,8 @@ class Main:
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    pauseMenu()
+                    state = pauseMenu()
+                    print(state)
 
 
 # Calls main when the program runs
