@@ -43,6 +43,10 @@ def mainMenu():
         options_button.draw(GAME_DISPLAY)
         quit_button.draw(GAME_DISPLAY)
 
+        key = pygame.key.get_pressed()
+        if key[pygame.K_ESCAPE]:
+            pygame.display.quit()
+            pygame.quit()
         for event in pygame.event.get():
            # Get's position of mouse to detect collisions
             pos = pygame.mouse.get_pos()
@@ -149,13 +153,15 @@ def pauseMenu():
     main_menu_button = Button("Main Menu",
                               ORANGE, 60, 20, 520, 330, 75)
     quit_button = Button("Quit Game", ORANGE, 90, 415, 310, 445, 75)
-
     running = True
     while running:
-        GAME_DISPLAY.fill((0, 0, 90))
-        # Paused message doesn't need to be a button hence the use of displayMessage()
+
+        rect = pygame.Surface((1280, 720), pygame.SRCALPHA, 32)
+        rect.fill((102, 178, 255, 10))
+        GAME_DISPLAY.blit(rect, (0, 0))
+
         displayMessage("- PAUSED - ", WHITE, 80, (475, 50))
-        # No need to fill background as pause menu should be placed 'above' the gmae window so user can see their progress
+
         # Draws Each button to the screen
         resume_button.draw(GAME_DISPLAY)
         main_menu_button.draw(GAME_DISPLAY)
@@ -202,6 +208,7 @@ def pauseMenu():
                 if event.key == pygame.K_ESCAPE:
                     running = False  # Breaks out of while loop
                     return True  # Breaks out of function
+
         pygame.display.update()
 
 
@@ -212,10 +219,14 @@ class Main:
         # Initialisations ----------------------------------------------------------------------#
         self.FPS = 60
         self.clock = pygame.time.Clock()
+        self.dt = 0  # (Explained bellow when value is assigned to it)
 
         # Game Window --------------------------------------------------------------------------#
         pygame.display.set_caption('Do Not Crash!')
         pygame.display.set_icon(game_icon_image)
+
+        # Creates Object -----------------------------------------------------------------------#
+        self.test_car = Test_Car(0, 0)  # Places car initially at (0,0)
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -224,42 +235,39 @@ class Main:
 
     def run(self, running=False):
         # Main game loop
-        test_car = Test_Car(0, 0)  # Places car initially at (0,0)
 
         while self.running:
             if self.initial_run:
                 mainMenu()  # The function makes initial run = False otherwise the saved state will carry on between menu screens
 
-            # TEMP PLACEHOLDER #
-
-            # # Time in ms since the last update aka Change in time
-            # dt = self.clock.get_time() / 1000
-            # print("Previous dt: ", dt)
-            # test_car.getEverything()
-
-            # TEMP PLACEHOLDER #
-
-            self.createMap(test_car)
-            self.handleCar(test_car)
+            self.createMap()
+            self.handleCar()
             self.events()
             self.update()
 
-    def createMap(self, test_car):
+    def createMap(self, ):
         # Handles all objects seen on the map
-        GAME_DISPLAY.fill((0, 0, 90))
-        GAME_DISPLAY.blit(car_sprite, test_car.getPosition())
 
-    def handleCar(self, test_car):
+        GAME_DISPLAY.fill((0, 0, 90))
+        GAME_DISPLAY.blit(car_sprite, self.test_car.getPosition())
+
+    def handleCar(self):
         # Handles the car logic
-        # Time in ms since the last update aka Change in time
-        dt = self.clock.get_time() / 1000
-        test_car.accelerate(dt)
-        # print(test_car.getPosition())
+
+        # Time since the last update aka Change in time
+        # This allows us to do simple integration for some physics simulation
+        self.dt = self.clock.get_time() / 100
+        self.test_car.accelerate(self.dt)
+        self.test_car.steering(car_sprite, self.dt)
+
         displayMessage(
-            f"Current Vel: {test_car.vel}", WHITE, 30, (500, 500))
+            f"Current Vel: {self.test_car.vel}", WHITE, 30, (500, 500))
+        displayMessage(
+            f"Current Accel: {self.test_car.accel}", WHITE, 30, (500, 600))
 
     def events(self):
         # Handles quit event
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.display.quit()
@@ -268,12 +276,14 @@ class Main:
             key = pygame.key.get_pressed()
             if key[pygame.K_ESCAPE]:
                 pauseMenu()
+                self.update()  # Stops the car from having a mind of it's own due to things breaking when the clock is not being ticked
 
             # Car Control ------------------------------------------------------------------#
             if key[pygame.K_a]:
-                pass
+                self.test_car.turning_angle -= 30 * self.dt  # Negative angles rotate clockwise
             if key[pygame.K_d]:
-                pass
+                # Positive angles rotate anti clockwise
+                self.test_car.turning_angle += 30 * self.dt
 
     def update(self):
         pygame.display.update()

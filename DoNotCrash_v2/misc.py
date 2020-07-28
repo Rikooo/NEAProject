@@ -30,5 +30,6 @@ arrow_left_image = pygame.image.load(
 # 64x64
 arrow_right_image = pygame.image.load(
     path+'/External Files/arrow_right_image.png').convert_alpha()
-car_sprite = pygame.image.load(
+car_sprites = pygame.image.load(
     path+'/External Files/test_sprite.png').convert_alpha()
+car_sprite = pygame.transform.scale(car_sprites, (50, 80))
