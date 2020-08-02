@@ -3,7 +3,7 @@ import json
 import os
 
 from button import *
-from misc import *
+from recources import *
 from testcar import *
 
 pygame.init()
@@ -219,6 +219,9 @@ class Main:
         # Initialisations ----------------------------------------------------------------------#
         self.FPS = 60
         self.clock = pygame.time.Clock()
+        # Slightly above 10 to allow the user to react to the timer before counting down
+        self.timer = 10.9
+        self.turn_count = 0
         self.dt = 0  # (Explained bellow when value is assigned to it)
 
         # Game Window --------------------------------------------------------------------------#
@@ -226,7 +229,7 @@ class Main:
         pygame.display.set_icon(game_icon_image)
 
         # Creates Object -----------------------------------------------------------------------#
-        self.test_car = Test_Car(0, 0)  # Places car initially at (0,0)
+        self.test_car = Test_Car(600, 600)  # Places car initially at (0,0)
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -240,30 +243,62 @@ class Main:
             if self.initial_run:
                 mainMenu()  # The function makes initial run = False otherwise the saved state will carry on between menu screens
 
+            # This allows us to do integration for some physics simulation
+            self.dt = self.clock.get_time() / 100
             self.createMap()
+            self.createTimer()
             self.handleCar()
             self.events()
             self.update()
 
-    def createMap(self, ):
+    def createMap(self):
         # Handles all objects seen on the map
 
         GAME_DISPLAY.fill((0, 0, 90))
-        GAME_DISPLAY.blit(car_sprite, self.test_car.getPosition())
+        displayMessage(f"FPS: {self.clock.get_fps()}",
+                       WHITE, 20, (1000, 400))
+        rotated_image = pygame.transform.rotate(
+            car_sprite, self.test_car.angle)
+
+        GAME_DISPLAY.blit(rotated_image, self.test_car.pos -
+                          (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
+
+    def createTimer(self):
+        # Timer
+
+        if self.timer < 10.9 and self.timer > 6:
+            displayMessage(f"Time: {int(self.timer)}", WHITE, 35, (1100, 30))
+        # Turns red when the clock hits 5 seconds to notify the user their turn is nearly over
+        elif self.timer <= 6 and self.timer >= 4:
+            displayMessage(f"Time: {int(self.timer)}", RED, 35, (1100, 30))
+        # Shows ms for the last 3 seconds
+        elif self.timer <= 4 and self.timer >= -1.1:  # -1.1 So the timer visual doesn't stop at 0.05 or similar
+            displayMessage(
+                f"Time: {self.timer:.2f}", RED, 35, (1100, 30))  # 2 decimal places
+
+        dt = self.dt / 10  # Get's My Time in seconds
+        self.timer -= dt
+
+        if self.timer < 0:
+            self.timer = 10  # Resets timer
+            # Placeholder
+            pauseMenu()  # This will pause the game, save the cars 'run' and accesses method to place car in a random position
 
     def handleCar(self):
         # Handles the car logic
 
-        # Time since the last update aka Change in time
-        # This allows us to do simple integration for some physics simulation
-        self.dt = self.clock.get_time() / 100
         self.test_car.accelerate(self.dt)
         self.test_car.steering(car_sprite, self.dt)
 
+        # Testing -------------------------------------------------------------------------#
         displayMessage(
-            f"Current Vel: {self.test_car.vel}", WHITE, 30, (500, 500))
+            f"Current Turning: {self.test_car.turning}", WHITE, 20, (1000, 450))
         displayMessage(
-            f"Current Accel: {self.test_car.accel}", WHITE, 30, (500, 600))
+            f"Current Vel: {self.test_car.vel}", WHITE, 20, (1000, 500))
+        displayMessage(
+            f"Current Accel: {self.test_car.accel}", WHITE, 20, (1000, 600))
+        displayMessage(
+            f"Current Angle: {self.test_car.angle}", WHITE, 20, (1000, 550))
 
     def events(self):
         # Handles quit event
@@ -278,12 +313,21 @@ class Main:
                 pauseMenu()
                 self.update()  # Stops the car from having a mind of it's own due to things breaking when the clock is not being ticked
 
-            # Car Control ------------------------------------------------------------------#
-            if key[pygame.K_a]:
-                self.test_car.turning_angle -= 30 * self.dt  # Negative angles rotate clockwise
-            if key[pygame.K_d]:
-                # Positive angles rotate anti clockwise
-                self.test_car.turning_angle += 30 * self.dt
+            #Car Control ------------------------------------------------------------------#
+            # Encapsulates all the presses in a KEYDOWN event to
+            # prevent game stutters not registering the key press and assigning a value of 0 by mistake
+            if event.type == pygame.KEYDOWN:
+                if key[pygame.K_a] or key[pygame.K_LEFT]:
+                    self.test_car.turning += 20   # Positive Rotates Anti Clockwise
+                if key[pygame.K_d] or key[pygame.K_RIGHT]:
+                    self.test_car.turning -= 20  # Negative angles rotate Clockwise
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                    self.test_car.turning = 0
+
+                elif event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                    self.test_car.turning = 0
 
     def update(self):
         pygame.display.update()

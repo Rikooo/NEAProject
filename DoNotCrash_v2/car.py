@@ -9,25 +9,5 @@ class Car(ABC):
         pass
 
     @abstractmethod
-    def getVelocity(self):
-        pass
-
-    @abstractmethod
-    def getDirection(self):
-        pass
-
-    @abstractmethod
-    def getPosition(self):
-        pass
-
-    @abstractmethod
-    def calcTurningRad(self):
-        pass
-
-    @abstractmethod
-    def turn(self):
-        pass
-
-    @abstractmethod
-    def getSize(self):
+    def steering(self):
         pass

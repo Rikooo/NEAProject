@@ -1,60 +1,56 @@
 from main import *
 from car import *
-from misc import *
+from recources import *
 
 
 import pygame
+from pygame import Vector2
 import os
 import math
 
 
-class Test_Car():
+class Test_Car(Car):
     '''Test class to get the basic functionality of the car working'''
 
     def __init__(self, x_pos=0, y_pos=0):
-        self.car_name = "Test"
+        self.car_name = None
         self.x_pos = x_pos
         self.y_pos = y_pos
-        self.turning_angle = 0.1  # In degrees
-        self.angle = 0.0
+        self.angle = 90  # Starts facing "North"
+        self.turning = 0.0
 
         # Only need to deal with horizontal component since the game doesn't involve any trajectories
-        self.vel = 0.0  # In ms^-1
-        self.max_vel = 30.0  # In ms^-1
+        self.vel = Vector2(0, 0)  # In ms^-1
+        self.pos = Vector2(self.x_pos, self.y_pos)
+        self.max_vel = 30  # In ms^-1
         self.accel = 1.0  # In ms^-2
 
-    def accelerate(self, dt):  # dt argument passed in main.py
+    def accelerate(self, dt):  # dt argument passed in from main.py
+        """ Accelerates Car from  0 to max_vel """
 
-        # Prevents further acceleration past maximum velocity
-        if int(self.vel) == int(self.max_vel):
-            # self.vel = self.vel
-            self.x_pos += self.vel * dt
-            # print("MAX VEL REACHED")
+        if self.vel.x >= self.max_vel:
+            self.vel.x = self.vel.x
+            self.accel = 0
         else:
-            self.vel += self.accel * dt
-            self.x_pos += self.vel * dt
-            self.accel += 0.9 * dt
-
-    def getPosition(self):
-        return (self.x_pos, self.y_pos)
+            self.vel.x += (self.accel * dt)
+            self.accel += 1 * dt
 
     def steering(self, car_sprite, dt):
-        # print(self.turn)
-        turning_rad = car_sprite.get_width() / math.sin(math.radians(self.turning_angle)
-                                                        )  # Turns it into rad to make the maths easier
-        angular_vel = self.vel / turning_rad  # In s^-1
+        """ Handles Turning support """
 
-        self.x_pos += self.vel.rotate(-self.angle) * dt
+        car_length = car_sprite.get_width()
+        if self.turning > 20 or self.turning < -20:  # Stops the game from imploding when exceeding max turning angle
+            self.turning = 0
+        try:
+            # math.sin only accepts radians
+            turning_rad = car_length / math.sin(math.radians(self.turning))
+            angular_vel = self.vel.x / turning_rad
 
-        self.angle += math.degrees(angular_vel) * \
-            dt  # And back into degrees to
+            self.angle += math.degrees(angular_vel) * dt
 
-    def getLength(self, car_sprite):
-        car_length = car_sprite.get_width()  # Used to calculate turning radius
-        return car_length
+        except ZeroDivisionError:  # Prevents the game from breaking due to self.turning = 0 thus dividing by 0
+            turning_rad = 0
+            angular_vel = 0
 
-    def getEverything(self):
-        pass
-        # print("Current Velocity: ", self.velocity)
-        # print("X_pos: ", self.x_pos)
-        # print(self.y_pos)
+        self.angle += math.degrees(angular_vel) * dt
+        self.pos += self.vel.rotate(-self.angle) * dt
