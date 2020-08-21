@@ -1,11 +1,7 @@
-from main import *
 from car import *
-from recources import *
-
 
 import pygame
 from pygame import Vector2
-import os
 import math
 
 

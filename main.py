@@ -7,6 +7,7 @@ from button import *
 from recources import *
 from testcar import *
 
+
 pygame.init()
 
 # Game Window ----------------------------------------------------------------------------#
@@ -228,11 +229,13 @@ class Main:
         self.spawn_points_list = []
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
-        self.timer = 10.9
-        self.countdown_timer = 3.9
+        self.timer = 10.9  # SHOULD BE 10.9
+        # self.countdown_timer = 3.9
         self.continuous_timer = 0
 
         self.turn_count = 1
+        self.snapshots = []
+        self.saved_replay = []
         self.replay_car_count = 0
         self.dt = 0  # (Explained bellow when value is assigned to it)
 
@@ -244,8 +247,8 @@ class Main:
         pygame.display.set_caption('Do Not Crash!')
         pygame.display.set_icon(game_icon_image)
 
-        # Creates Object -----------------------------------------------------------------------#
-        # self.test_car = Test_Car()
+        # Handle Replay -----------------------------------------------------------------------#
+        self.next_index = 1
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -335,9 +338,9 @@ class Main:
 
         if self.timer < 0:
             self.timer = 10.9  # Resets timer
-            # Placeholder
-            # pauseMenu()  # This will pause the game, save the cars 'run' and accesses method to place car in a random position
             self.continuous_timer = 0  # Resets reading for saveSnapshot()
+
+            self.saved_replay.append(self.snapshots)
             self.turn_count += 1
             self.flag_spawn = True
 
@@ -348,7 +351,9 @@ class Main:
         self.test_car.steering(self.dt)
         self.wallTeleport()
 
-        # Car Route -----------------------------------------------------------------------#
+        # Car Replay -----------------------------------------------------------------------#
+        if self.turn_count > 1:
+            self.displayReplays()
 
         # Testing -------------------------------------------------------------------------#
         displayMessage(
@@ -361,16 +366,54 @@ class Main:
             f"Current Angle: {self.test_car.angle}", WHITE, 20, (1000, 550))
 
     def saveSnapshot(self):
-        # Records all the essential car movements at a given moment in time within my game
+        # Records all the essential car movements at a given moment in time
 
         dt = self.dt / 10  # Get's My Time in seconds
         self.continuous_timer += dt
 
-        # Establishes data types to be updated
-        snapshots = []
-        time = {}
-        position = {}
-        angle = {}
+        # Stores useful data on the pos and rotation of the car at a given time
+        data_points = {'time': round(self.continuous_timer, 2),
+                       'position': [round(self.test_car.pos.x, 2), round(self.test_car.pos.y, 2)],
+                       'angle': round(self.test_car.angle, 2)}
+        self.snapshots.append(data_points)
+
+    def displayReplays(self):
+        # Handles everything from the replay related
+
+        # Starts with the first dictionary element in the snapshot list
+        # [0] IS   TEMP MAKE SURE TO CHANGE IT TO TURN_COUNT - 2
+        # self.saved_replay([turn_count-1][snapshot_number]['key'][0/1])
+        prev_snapshot = self.saved_replay[0][self.next_index-1]
+        next_snapshot = self.saved_replay[0][self.next_index]
+
+        if self.turn_count > 1:
+            # Get's the current time in order to calculate the ratio difference bettween the current run and the replay
+            dt = self.dt/10
+            self.continuous_timer += dt
+
+            # Changes pointer after the contents of the current index has been read
+            if self.continuous_timer > next_snapshot['time']:
+                self.next_index += 1
+                prev_snapshot = self.saved_replay[0][self.next_index-1]
+                next_snapshot = self.saved_replay[0][self.next_index]
+
+            # Declares how to read the data in order to synchronise the potential time difference between replay and playing the game
+            snapshot_time_diff = next_snapshot['time'] - prev_snapshot['time']
+            ratio = (self.continuous_timer -
+                     prev_snapshot['time']) / snapshot_time_diff
+
+            # Assigns Value to variable after time ratio calculations then blits it
+            x_pos = prev_snapshot['position'][0]  # + ratio * \
+            #  (next_snapshot['position'][0] - prev_snapshot['position'][0])
+            y_pos = prev_snapshot['position'][1]  # + ratio * \
+            # (next_snapshot['position'][1] - prev_snapshot['position'][1])
+            angle = prev_snapshot['angle']  # + ratio * \
+            #(next_snapshot['angle'] - prev_snapshot['angle'])
+
+            # Blitting
+            rotated_image = pygame.transform.rotate(
+                self.test_car.image, angle)
+            GAME_DISPLAY.blit(rotated_image, (x_pos, y_pos))
 
     def wallTeleport(self):
         # Places the user on the opposite side of the map when leaving to give them more options for routes
