@@ -1,5 +1,7 @@
+import os
 import pygame
 
+path = os.path.dirname(os.path.dirname(__file__))
 
 class Button:
     """ Class Generates a button with text """
@@ -15,8 +17,7 @@ class Button:
 
     def draw(self, GAME_DISPLAY):
         # Need a smaller font to fit into the button
-        font = pygame.font.Font(
-            'NEA Project\external files\street.ttf', self.text_size)
+        font = pygame.font.Font(path+'/External Files/street.ttf', self.text_size)
         # The actual rectangle 'hitbox' for the button (Transparrent To The User)
         pygame.draw.rect(GAME_DISPLAY, (0, 0, 0),
                          (self.x, self.y, self.width, self.height), -1)

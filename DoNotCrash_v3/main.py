@@ -75,7 +75,7 @@ def mainMenu():
                     quit_button.text_colour, quit_button.text_size = ORANGE, 75
 
             # HANDLING --------------------------------------------------------------------#
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Handles what to do after the user clicks on the corresponding button
                 if play_game_button.mouseOver(pos):
                     # This avoids the current state of whatever menu system overriding the intended menu
@@ -131,7 +131,7 @@ def chooseCarMenu():
                     quit_button.text_colour, quit_button.text_size = NEON_GREEN, 60
 
             # HANDLING --------------------------------------------------------------------#
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Handles what to do after the user clicks on the corresponding button
                 if play_button.mouseOver(pos):
                     Main(initial_run=False)
@@ -194,7 +194,7 @@ def pauseMenu():
                     quit_button.text_colour, quit_button.text_size = ORANGE, 90
 
             # HANDLING --------------------------------------------------------------------#
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Handles what to do after the user clicks on the corresponding button
                 if resume_button.mouseOver(pos):
                     # Returns the user back to the game
@@ -239,8 +239,8 @@ class Main:
         self.dt = 0  # (Explained bellow when value is assigned to it)
 
         # Sprite Handling ----------------------------------------------------------------------#
-        # Places all my sprites under 1 group to be easily handled in the same way
-        self.replay_sprites = pygame.sprite.Group()
+        self.all_sprites = pygame.sprite.Group()
+        self.replay_sprites_group = pygame.sprite.Group()
 
         # Game Window --------------------------------------------------------------------------#
         pygame.display.set_caption('Do Not Crash!')
@@ -281,14 +281,14 @@ class Main:
             with open(path_2+'/spawn_points.json') as f:  # Automatically a read only file
                 self.spawn_points_list = json.load(f)
 
-        try:  # Encapsulate any potential errors
+        try:  # Encapsulate error when the game runs out of spawn points
             # print(self.spawn_points_list)
             index = randint(0, len(self.spawn_points_list)-1)
             new_spawn_location = self.spawn_points_list[index]
             # Avoids respawning in the same location by deleting the used spawn location index
             self.test_car = Test_Car(car_sprite,
                                      new_spawn_location[0], new_spawn_location[1], new_spawn_location[2])
-
+            self.all_sprites.add(self.test_car)
             del self.spawn_points_list[index]
             self.flag_spawn = False
 
@@ -313,10 +313,6 @@ class Main:
             self.test_car.image, self.test_car.angle)
         GAME_DISPLAY.blit(rotated_image, self.test_car.pos -
                           (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
-        # rotated_sprite = pygame.transform.rotate(
-        #     self.test_car.image, self.test_car.angle)
-        # GAME_DISPLAY.blit(rotated_sprite, self.test_car.pos -
-        #                   (self.test_car.image.get_width() / 2, self.test_car.image.get_height() / 2))
 
     def createTimer(self):
         # Timer
@@ -334,10 +330,12 @@ class Main:
         dt = self.dt / 10  # Get's My Time in seconds
         self.timer -= dt
 
+        # Handles everything that should happen at the end of the turn
         if self.timer < 0:
+            # Removes the previous turns sprite from the group as it is becomes a 'replay' sprite
+            self.test_car.removeFromSpriteList()
             self.timer = 10.9  # Resets timer
             self.continuous_timer = 0  # Resets reading for saveSnapshot()
-
             self.saved_replay.append(self.snapshots)
             self.turn_count += 1
             self.flag_spawn = True
@@ -347,6 +345,7 @@ class Main:
 
         self.test_car.accelerate(self.dt)
         self.test_car.steering(self.dt)
+        self.test_car.update()
         self.wallTeleport()
 
         # Car Replay -----------------------------------------------------------------------#
@@ -354,14 +353,14 @@ class Main:
             self.displayReplays()
 
         # Testing -------------------------------------------------------------------------#
-        displayMessage(
-            f"Current Turning: {self.test_car.turning}", WHITE, 20, (1000, 450))
-        displayMessage(
-            f"Current Vel: {self.test_car.vel}", WHITE, 20, (1000, 500))
-        displayMessage(
-            f"Current Accel: {self.test_car.accel}", WHITE, 20, (1000, 600))
-        displayMessage(
-            f"Current Angle: {self.test_car.angle}", WHITE, 20, (1000, 550))
+        # displayMessage(
+        #     f"Current Turning: {self.test_car.turning}", WHITE, 20, (1000, 450))
+        # displayMessage(
+        #     f"Current Vel: {self.test_car.vel}", WHITE, 20, (1000, 500))
+        # displayMessage(
+        #     f"Current Accel: {self.test_car.accel}", WHITE, 20, (1000, 600))
+        # displayMessage(
+        #     f"Current Angle: {self.test_car.angle}", WHITE, 20, (1000, 550))
 
     def saveSnapshot(self):
         # Records all the essential car movements at a given moment in time
@@ -369,7 +368,7 @@ class Main:
         dt = self.dt / 10  # Get's My Time in seconds
         self.continuous_timer += dt
 
-        # Stores useful data on the pos and rotation of the car at a given time
+        # Stores the pos and rotation of the car at a given time
         data_points = {'time': round(self.continuous_timer, 2),
                        'position': [round(self.test_car.pos.x, 2), round(self.test_car.pos.y, 2)],
                        'angle': round(self.test_car.angle, 2)}
@@ -377,47 +376,47 @@ class Main:
 
     def displayReplays(self):
         # Handles everything from the replay related
-        print(len(self.saved_replay))
-        for i in range(len(self.saved_replay)):
-            # Starts with the first dictionary element in the snapshot list
-            # How2Read: self.saved_replay([turn_count-2][snapshot_number]['key'][0/1])
 
-            prev_snapshot = self.saved_replay[i][self.next_index-1]
-            next_snapshot = self.saved_replay[i][self.next_index]
+        # Starts with the first dictionary element in the snapshot list
+        # How2Read: self.saved_replay([replay_num][snapshot_number]['key'][0/1])
 
-            # Get's the current time in order to calculate the ratio difference bettween the current run and the replay
-            dt = self.dt/10
-            self.continuous_timer += dt
+        prev_snapshot = self.saved_replay[self.turn_count-2][self.next_index-1]
+        next_snapshot = self.saved_replay[self.turn_count-2][self.next_index]
 
-            # Changes pointer after the contents of the current index has been read
-            if self.continuous_timer > next_snapshot['time']:
-                self.next_index += 1
-                prev_snapshot = self.saved_replay[i][self.next_index-1]
-                next_snapshot = self.saved_replay[i][self.next_index]
+        # Get's the current time in order to calculate the ratio difference bettween the current run and the replay
+        dt = self.dt/10
+        self.continuous_timer += dt
 
-            # Assigns Value to variable
-            x_pos = prev_snapshot['position'][0]
-            y_pos = prev_snapshot['position'][1]
-            angle = prev_snapshot['angle']
-            # Needs to be in a 'vector' in order to rotate it
-            pos = pygame.Vector2(x_pos, y_pos)
+        # Changes pointer after the contents of the current index has been read
+        # if self.continuous_timer > next_snapshot['time']:
+        #     self.next_index += 1
+        #     prev_snapshot = self.saved_replay[i][self.next_index-1]
+        #     next_snapshot = self.saved_replay[i][self.next_index]
 
-            # Blitting
-            # self.replay_sprites.add(self.test_car)
-            rotated_image = pygame.transform.rotate(
-                enemy_sprite, angle)
+        # Assigns Value to variable
+        x_pos = prev_snapshot['position'][0]
+        y_pos = prev_snapshot['position'][1]
+        angle = prev_snapshot['angle']
+        # Needs to be in a 'vector' in order to rotate it
+        pos = pygame.Vector2(x_pos, y_pos)
+
+        # Blitting
+        # self.replay_sprites.add(self.test_car)
+        rotated_image = pygame.transform.rotate(
+            enemy_sprite, angle)
+        for replay in self.saved_replay:
             GAME_DISPLAY.blit(rotated_image, pos -
                               (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
-            i += 1
+        self.next_index += 1
 
     def wallTeleport(self):
         # Places the user on the opposite side of the map when leaving to give them more options for routes
 
-        # pygame.draw.rect(GAME_DISPLAY, BLACK, self.test_car.get_hitbox(), 2)
-        # pygame.draw.circle(GAME_DISPLAY, BLACK, (int(self.test_car.pos.x),
-        #  int(self.test_car.pos.y)), int(self.test_car.rect.width/2) + 5, 2)
-        car_hitbox = self.test_car.get_hitbox()
-        # Car_hitbox = (x, y, width, height)
+        # car_hitbox = (x, y, width, height)
+        # Rectangular Based Collisions will be used for the cars as it resembles the shape nicely and is much
+        #   faster than mask based collision (~ 112% Faster!) which adds up as more cars are added to the screen
+        car_hitbox = self.test_car.rect
+        pygame.draw.rect(GAME_DISPLAY, BLACK, car_hitbox, 2)
         if car_hitbox[0] > DISPLAY_WIDTH:
             self.test_car.pos.x = 0
         if car_hitbox[0] + car_hitbox[2] < 0:

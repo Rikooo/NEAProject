@@ -11,12 +11,11 @@ class Test_Car(Car, pygame.sprite.Sprite):
         # Sprite Functionality
         pygame.sprite.Sprite.__init__(self)
         self.image = image
-        self.rect = self.image.get_rect()
-        self.radius = self.rect.w / 2
-
         self.car_name = None
         self.x_pos = x_pos
         self.y_pos = y_pos
+
+        # self.radius = self.rect.w / 2
         self.angle = angle
         self.turning = 0.0
 
@@ -25,6 +24,10 @@ class Test_Car(Car, pygame.sprite.Sprite):
         self.pos = Vector2(self.x_pos, self.y_pos)
         self.max_vel = 30  # In ms^-1
         self.accel = 1.0  # In ms^-2
+
+        # Decreases the length of my rectangle (hitbox) which allows for more accurate real time collision
+        self.rect = self.image.get_rect(center=self.pos)
+        self.rect = self.rect.inflate(0, -25)
 
     def accelerate(self, dt):  # dt argument passed in from main.py
         """ Accelerates Car from  0 to max_vel """
@@ -56,7 +59,11 @@ class Test_Car(Car, pygame.sprite.Sprite):
         self.angle += math.degrees(angular_vel) * dt
         self.pos += self.vel.rotate(-self.angle) * dt
 
-    def get_hitbox(self):
-        """ Get's Rectangular Hitbox Around the Car """
+    def update(self):
+        # Updates Rectangle to be in accordance to the images position
+        # self.rect.x = self.pos.x - (self.rect.width/2)
+        # self.rect.y = self.pos.y - (self.rect.height/2)
+        self.rect.center = self.pos
 
-        return ((self.pos.x - self.rect.width/2), (self.pos.y - self.rect.h/2), self.rect.w, self.rect.h)
+    def removeFromSpriteList(self):
+        self.kill()
