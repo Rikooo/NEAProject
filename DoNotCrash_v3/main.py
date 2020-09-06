@@ -228,7 +228,7 @@ class Main:
         self.spawn_points_list = []
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
-        self.timer = 10.9  # SHOULD BE 10.9
+        self.timer = 1.9  # SHOULD BE 10.9
         # self.countdown_timer = 3.9
         self.continuous_timer = 0
 
@@ -248,6 +248,7 @@ class Main:
 
         # Handle Replay -----------------------------------------------------------------------#
         self.next_index = 1
+        self.test_replay = Replay(enemy_sprite, 0, 0)
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -380,8 +381,8 @@ class Main:
         # Starts with the first dictionary element in the snapshot list
         # How2Read: self.saved_replay([replay_num][snapshot_number]['key'][0/1])
 
-        prev_snapshot = self.saved_replay[self.turn_count-2][self.next_index-1]
-        next_snapshot = self.saved_replay[self.turn_count-2][self.next_index]
+        # prev_snapshot = self.saved_replay[self.turn_count-2][self.next_index-1]
+        # next_snapshot = self.saved_replay[self.turn_count-2][self.next_index]
 
         # Get's the current time in order to calculate the ratio difference bettween the current run and the replay
         dt = self.dt/10
@@ -394,19 +395,29 @@ class Main:
         #     next_snapshot = self.saved_replay[i][self.next_index]
 
         # Assigns Value to variable
-        x_pos = prev_snapshot['position'][0]
-        y_pos = prev_snapshot['position'][1]
-        angle = prev_snapshot['angle']
+        # x_pos = prev_snapshot['position'][0]
+        # y_pos = prev_snapshot['position'][1]
+        # angle = prev_snapshot['angle']
         # Needs to be in a 'vector' in order to rotate it
+        for i in range(len(self.saved_replay)):
+            x_pos = self.saved_replay[i][self.next_index-1]['position'][0]
+            y_pos = self.saved_replay[i][self.next_index-1]['position'][1]
+            angle = self.saved_replay[i][self.next_index-1]['angle']
+
         pos = pygame.Vector2(x_pos, y_pos)
 
         # Blitting
         # self.replay_sprites.add(self.test_car)
-        rotated_image = pygame.transform.rotate(
-            enemy_sprite, angle)
-        for replay in self.saved_replay:
-            GAME_DISPLAY.blit(rotated_image, pos -
-                              (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
+        # rotated_image = pygame.transform.rotate(
+        #     enemy_sprite, angle)
+        # for replay in self.saved_replay:
+        #     # Add sprite to replay class
+        #     GAME_DISPLAY.blit(rotated_image, pos -
+        #                       (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
+
+        self.test_replay.pos = pos
+        self.test_replay.angle = angle
+        self.test_replay.update(GAME_DISPLAY, self.saved_replay)
         self.next_index += 1
 
     def wallTeleport(self):
@@ -436,6 +447,9 @@ class Main:
 
             key = pygame.key.get_pressed()
             if key[pygame.K_ESCAPE]:
+                # Makes them red to be easily seen over the pause menu screen
+                displayMessage(f"Turn: {self.turn_count}", RED, 35, (24, 10))
+                displayMessage(f"Time: {int(self.timer)}", RED, 35, (1100, 10))
                 pauseMenu()
                 self.update()  # Stops the car from having a mind of it's own due to things breaking when the clock is not being ticked
 
