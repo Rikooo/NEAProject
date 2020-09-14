@@ -228,8 +228,7 @@ class Main:
         self.spawn_points_list = []
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
-        self.timer = 10.9  # SHOULD BE 10.9
-        # self.countdown_timer = 3.9
+        self.timer = 1.9  # SHOULD BE 10.9
         self.continuous_timer = 0
 
         self.turn_count = 1
@@ -248,7 +247,7 @@ class Main:
 
         # Handle Replay -----------------------------------------------------------------------#
         self.start = False
-        self.test_replay = Replay(enemy_sprite, 0, 0)
+        # self.test_replay = Replay(enemy_sprite, 0, 0)
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -334,11 +333,14 @@ class Main:
 
         # Handles everything that should happen at the end of the turn
         if self.timer < 0:
+            
             # Removes the previous turns sprite from the group as it is becomes a 'replay' sprite
             self.test_car.removeFromSpriteList()
-            self.timer = 10.9  # Resets timer
+            self.timer = 1.9  # Resets timer
             self.continuous_timer = 0  # Resets reading for saveSnapshot()
+            
             self.saved_replay.append(self.snapshots)
+            # print(len(self.saved_replay))
             self.snapshots = []
             self.turn_count += 1
             self.flag_spawn = True
@@ -381,16 +383,11 @@ class Main:
 
     def displayReplays(self):
         # Handles everything replay related
-
-        # Get's the current time in order to calculate the ratio difference bettween the current run and the replay
-        # dt = self.dt/10
-        # This Object will handle everything from collision detection to blitting the replay
-        # print(self.start)
-        
-        self.test_replay.update(
-            GAME_DISPLAY, self.r_copy, self.continuous_timer, self.start)
-        # self.start = self.test_replay.returnStart()
-        # self.next_index += 1
+    
+        replayObject = Replay(enemy_sprite, self.saved_replay, GAME_DISPLAY, self.continuous_timer)
+        self.replay_sprites_group.add(replayObject)
+        replayObject.update()
+        self.replay_sprites_group.draw(GAME_DISPLAY)
 
     def wallTeleport(self):
         # Places the user on the opposite side of the map when leaving to give them more options for routes
