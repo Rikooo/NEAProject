@@ -5,17 +5,16 @@ from car import *
 
 
 class Test_Car(Car, pygame.sprite.Sprite):
-    '''Test class to get the basic functionality of the car working'''
+    """Test class to get the basic functionality of the car working"""
 
     def __init__(self, image, x_pos=500, y_pos=0, angle=90):
         # Sprite Functionality
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.car_name = None
+
         self.x_pos = x_pos
         self.y_pos = y_pos
-
-        # self.radius = self.rect.w / 2
         self.angle = angle
         self.turning = 0.0
 
@@ -60,10 +59,11 @@ class Test_Car(Car, pygame.sprite.Sprite):
         self.pos += self.vel.rotate(-self.angle) * dt
 
     def update(self):
-        # Updates Rectangle to be in accordance to the images position
-        # self.rect.x = self.pos.x - (self.rect.width/2)
-        # self.rect.y = self.pos.y - (self.rect.height/2)
+        """ Updates Rectangle to be in accordance to the images position"""
+
         self.rect.center = self.pos
 
     def removeFromSpriteList(self):
+        """Used to update sprite group"""
+
         self.kill()

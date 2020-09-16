@@ -229,7 +229,8 @@ class Main:
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
         self.timer = 1.9  # SHOULD BE 10.9
-        self.continuous_timer = 0
+        # self.countdown_timer = 3.9
+        # self.continuous_timer = 0
 
         self.turn_count = 1
         self.snapshots = []
@@ -247,7 +248,7 @@ class Main:
 
         # Handle Replay -----------------------------------------------------------------------#
         self.start = False
-        # self.test_replay = Replay(enemy_sprite, 0, 0)
+        self.replay_object = Replay(enemy_sprite, 0, 0)
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -299,7 +300,7 @@ class Main:
     def createMap(self):
         # Handles all objects seen on the map
 
-        # GAME_DISPLAY.fill((0, 0, 90))
+        # GAME_DISPLAY.fill((0, 0, 0))
         GAME_DISPLAY.blit(grass_image, (0, 0))
 
         # Transparent Rectangle Behind Turn Count/Timer/Healthbar
@@ -333,19 +334,14 @@ class Main:
 
         # Handles everything that should happen at the end of the turn
         if self.timer < 0:
-            
             # Removes the previous turns sprite from the group as it is becomes a 'replay' sprite
             self.test_car.removeFromSpriteList()
             self.timer = 1.9  # Resets timer
-            self.continuous_timer = 0  # Resets reading for saveSnapshot()
-            
+            # self.continuous_timer = 0  # Resets reading for saveSnapshot()
             self.saved_replay.append(self.snapshots)
-            # print(len(self.saved_replay))
             self.snapshots = []
             self.turn_count += 1
             self.flag_spawn = True
-            # self.start = True
-            self.r_copy = self.saved_replay
 
     def handleCar(self):
         # Handles the car logic
@@ -372,22 +368,37 @@ class Main:
     def saveSnapshot(self):
         # Records all the essential car movements at a given moment in time
 
-        dt = self.dt / 10  # Get's My Time in seconds
-        self.continuous_timer += dt
-
         # Stores the pos and rotation of the car at a given time
-        data_points = {'time': round(self.continuous_timer, 2),
-                       'position': [round(self.test_car.pos.x, 2), round(self.test_car.pos.y, 2)],
-                       'angle': round(self.test_car.angle, 2)}
+        # Time will be in synch with the current time during the round
+        #    i.e starts at "10" then goes down, just like the
+        data_points = {'time': self.timer,
+                       'position': [self.test_car.pos.x, self.test_car.pos.y],
+                       'angle': self.test_car.angle}
         self.snapshots.append(data_points)
 
     def displayReplays(self):
         # Handles everything replay related
-    
-        replayObject = Replay(enemy_sprite, self.saved_replay, GAME_DISPLAY, self.continuous_timer)
-        self.replay_sprites_group.add(replayObject)
-        replayObject.update()
-        self.replay_sprites_group.draw(GAME_DISPLAY)
+
+        # Starts with the first dictionary element in the snapshot list and iterates through  everything
+        for i in range(len(self.saved_replay)):
+            for j in range(len(self.saved_replay[i])):
+
+                x_pos = self.saved_replay[i][j]['position'][0]
+                y_pos = self.saved_replay[i][j]['position'][1]
+                angle = self.saved_replay[i][j]['angle']
+
+                if self.saved_replay[i][j]['time'] > self.timer and self.saved_replay[i][j]['time'] < self.timer+0.04:
+                    pos = pygame.Vector2(x_pos, y_pos)
+                    rotated_image = pygame.transform.rotate(
+                        self.replay_object.image, angle)
+
+                    GAME_DISPLAY.blit(rotated_image, pos -
+                                      (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
+                    # breaks out before it can blit more than 1 car in the replay
+                    break
+
+            # self.replay_object.update()
+            # self.replay_sprites_group.add(self.replay_object)
 
     def wallTeleport(self):
         # Places the user on the opposite side of the map when leaving to give them more options for routes
