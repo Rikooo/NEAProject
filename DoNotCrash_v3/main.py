@@ -248,7 +248,7 @@ class Main:
 
         # Handle Replay -----------------------------------------------------------------------#
         self.start = False
-        self.replay_object = Replay(enemy_sprite, 0, 0)
+        self.replay_object = Replay(enemy_sprite)
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -387,18 +387,24 @@ class Main:
                 y_pos = self.saved_replay[i][j]['position'][1]
                 angle = self.saved_replay[i][j]['angle']
 
+                # Synchronises the current time with the replay time to display the replay in real time wuth a varience of ~0.04
                 if self.saved_replay[i][j]['time'] > self.timer and self.saved_replay[i][j]['time'] < self.timer+0.04:
                     pos = pygame.Vector2(x_pos, y_pos)
+                    self.replay_object.pos = pos
+                    replay_hitbox = self.replay_object.rect
+
+                    # Draws the hitbox around the replay cars
+                    self.replay_object.update()
+                    pygame.draw.rect(GAME_DISPLAY, BLACK, replay_hitbox, 2)
+                    self.replay_sprites_group.add(self.replay_object)
+
+                    # Blits the Car to the screen
                     rotated_image = pygame.transform.rotate(
                         self.replay_object.image, angle)
-
                     GAME_DISPLAY.blit(rotated_image, pos -
                                       (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
                     # breaks out before it can blit more than 1 car in the replay
                     break
-
-            # self.replay_object.update()
-            # self.replay_sprites_group.add(self.replay_object)
 
     def wallTeleport(self):
         # Places the user on the opposite side of the map when leaving to give them more options for routes
