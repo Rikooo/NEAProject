@@ -228,7 +228,7 @@ class Main:
         self.spawn_points_list = []
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
-        self.timer = 1.9  # SHOULD BE 10.9
+        self.timer = 10.9  # SHOULD BE 10.9
         # self.countdown_timer = 3.9
         # self.continuous_timer = 0
 
@@ -239,7 +239,7 @@ class Main:
         self.dt = 0  # (Explained bellow when value is assigned to it)
 
         # Sprite Handling ----------------------------------------------------------------------#
-        self.all_sprites = pygame.sprite.Group()
+        self.user_car_sprite = pygame.sprite.Group()
         self.replay_sprites_group = pygame.sprite.Group()
 
         # Game Window --------------------------------------------------------------------------#
@@ -270,6 +270,7 @@ class Main:
             self.createTimer()
             self.handleCar()
             self.saveSnapshot()
+            # self.collisionDetection()
             self.events()
             self.update()
 
@@ -289,7 +290,7 @@ class Main:
             # Avoids respawning in the same location by deleting the used spawn location index
             self.test_car = Test_Car(car_sprite,
                                      new_spawn_location[0], new_spawn_location[1], new_spawn_location[2])
-            self.all_sprites.add(self.test_car)
+            self.user_car_sprite.add(self.test_car)
             del self.spawn_points_list[index]
             self.flag_spawn = False
 
@@ -302,6 +303,7 @@ class Main:
 
         # GAME_DISPLAY.fill((0, 0, 0))
         GAME_DISPLAY.blit(grass_image, (0, 0))
+        GAME_DISPLAY.blit(roads_image, (0, 0))
 
         # Transparent Rectangle Behind Turn Count/Timer/Healthbar
         GAME_DISPLAY.blit(left_rectangle_image, (0, 0))
@@ -336,7 +338,7 @@ class Main:
         if self.timer < 0:
             # Removes the previous turns sprite from the group as it is becomes a 'replay' sprite
             self.test_car.removeFromSpriteList()
-            self.timer = 1.9  # Resets timer
+            self.timer = 10.9  # Resets timer
             # self.continuous_timer = 0  # Resets reading for saveSnapshot()
             self.saved_replay.append(self.snapshots)
             self.snapshots = []
@@ -357,7 +359,7 @@ class Main:
 
         # Testing -------------------------------------------------------------------------#
         # displayMessage(
-        #     f"Current Turning: {self.taaest_car.turning}", WHITE, 20, (1000, 450))
+        #     f"Current Turning: {self.test_car.turning}", WHITE, 20, (1000, 450))
         # displayMessage(
         #     f"Current Vel: {self.test_car.vel}", WHITE, 20, (1000, 500))
         # displayMessage(
@@ -398,6 +400,10 @@ class Main:
                     pygame.draw.rect(GAME_DISPLAY, BLACK, replay_hitbox, 2)
                     self.replay_sprites_group.add(self.replay_object)
 
+                    if self.replay_object.isCollided(self.test_car):
+
+                        self.collisionDetection()
+
                     # Blits the Car to the screen
                     rotated_image = pygame.transform.rotate(
                         self.replay_object.image, angle)
@@ -422,6 +428,13 @@ class Main:
             self.test_car.pos.y = 0
         if car_hitbox[1] + car_hitbox[3] < 0:
             self.test_car.pos.y = DISPLAY_HEIGHT
+
+    def collisionDetection(self):
+        # collided = pygame.sprite.groupcollide.collide_rect(
+        # self.user_car_sprite, self.replay_sprites_group,)
+        # if collided:
+        # print(True)
+        self.test_car.pos = Vector2(50, 50)
 
     def events(self):
         # Handles quit event

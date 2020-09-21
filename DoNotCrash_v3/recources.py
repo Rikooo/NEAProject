@@ -38,6 +38,9 @@ arrow_right_image = pygame.image.load(
 # 1280x720
 grass_image = pygame.image.load(
     path+'/External Files/grass_image.png').convert_alpha()
+# 1280x720
+roads_image = pygame.image.load(
+    path+'/External Files/roads.png').convert_alpha()
 
 
 left_rectangle_image_raw = pygame.image.load(
@@ -51,9 +54,7 @@ right_rectangle_image = pygame.transform.scale(
 
 car_sprite_raw = pygame.image.load(
     path+'/External Files/test_sprite.png').convert_alpha()
-car_sprite = pygame.transform.scale(car_sprite_raw, (50, 80))
+car_sprite = pygame.transform.scale(car_sprite_raw, (30, 48))
 enemy_car_sprite_raw = pygame.image.load(
     path+'/External Files/test_sprite_enemy.png').convert_alpha()
-enemy_sprite = pygame.transform.scale(enemy_car_sprite_raw, (50, 80))
-
-# Misc  --------------------------------------------------------------------------------#
+enemy_sprite = pygame.transform.scale(enemy_car_sprite_raw, (30, 48))

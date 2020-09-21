@@ -4,7 +4,7 @@ import pygame
 class Replay(pygame.sprite.Sprite):
     """ Handles all the car replays """
 
-    def __init__(self, image):
+    def __init__(self, image, pos=None):
         # Used to update replay ghost cars
         pygame.sprite.Sprite.__init__(self)
         self.image = image
@@ -17,3 +17,12 @@ class Replay(pygame.sprite.Sprite):
         """ Used to update the hitbox position for hitbox collision"""
 
         self.rect.center = self.pos
+
+    def isCollided(self, sprite):
+
+        return self.rect.colliderect(sprite.rect)
+
+    def removeFromSpriteList(self):
+        """Used to update sprite group"""
+
+        self.kill()

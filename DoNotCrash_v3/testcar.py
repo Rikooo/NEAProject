@@ -21,8 +21,8 @@ class Test_Car(Car, pygame.sprite.Sprite):
         # Only need to deal with horizontal component since the game doesn't involve any trajectories
         self.vel = Vector2(0, 0)  # In ms^-1
         self.pos = Vector2(self.x_pos, self.y_pos)
-        self.max_vel = 30  # In ms^-1
-        self.accel = 1.0  # In ms^-2
+        self.max_vel = 15  # In ms^-1
+        self.accel = 0.5  # In ms^-2
 
         # Decreases the length of my rectangle (hitbox) which allows for more accurate real time collision
         self.rect = self.image.get_rect(center=self.pos)
@@ -49,7 +49,7 @@ class Test_Car(Car, pygame.sprite.Sprite):
             turning_rad = car_length / math.sin(math.radians(self.turning))
             angular_vel = self.vel.x / turning_rad
 
-            self.angle += math.degrees(angular_vel) * dt
+            self.angle += math.degrees(angular_vel) * dt * 1.7
 
         except ZeroDivisionError:  # Prevents the game from breaking due to self.turning = 0 thus dividing by 0
             turning_rad = 0
