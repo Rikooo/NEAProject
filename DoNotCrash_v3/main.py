@@ -228,9 +228,7 @@ class Main:
         self.spawn_points_list = []
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
-        self.timer = 10.9  # SHOULD BE 10.9
-        # self.countdown_timer = 3.9
-        # self.continuous_timer = 0
+        self.timer = 10.5  # SHOULD BE 10.5
 
         self.turn_count = 1
         self.snapshots = []
@@ -321,7 +319,7 @@ class Main:
     def createTimer(self):
         # Timer
 
-        if self.timer < 10.9 and self.timer > 6:
+        if self.timer < 10.5 and self.timer > 6:
             displayMessage(f"Time: {int(self.timer)}", WHITE, 35, (1100, 10))
         # Turns red when the clock hits 5 seconds to notify the user their turn is nearly over
         elif self.timer <= 6 and self.timer >= 4:
@@ -338,7 +336,7 @@ class Main:
         if self.timer < 0:
             # Removes the previous turns sprite from the group as it is becomes a 'replay' sprite
             self.test_car.removeFromSpriteList()
-            self.timer = 10.9  # Resets timer
+            self.timer = 10.5  # Resets timer
             # self.continuous_timer = 0  # Resets reading for saveSnapshot()
             self.saved_replay.append(self.snapshots)
             self.snapshots = []
@@ -366,13 +364,14 @@ class Main:
         #     f"Current Accel: {self.test_car.accel}", WHITE, 20, (1000, 600))
         # displayMessage(
         #     f"Current Angle: {self.test_car.angle}", WHITE, 20, (1000, 550))
+        # displayMessage(
+        #     f"Current Pos: {self.test_car.pos}", WHITE, 20, (800, 450))
 
     def saveSnapshot(self):
         # Records all the essential car movements at a given moment in time
 
         # Stores the pos and rotation of the car at a given time
         # Time will be in synch with the current time during the round
-        #    i.e starts at "10" then goes down, just like the
         data_points = {'time': self.timer,
                        'position': [self.test_car.pos.x, self.test_car.pos.y],
                        'angle': self.test_car.angle}
@@ -430,11 +429,9 @@ class Main:
             self.test_car.pos.y = DISPLAY_HEIGHT
 
     def collisionDetection(self):
-        # collided = pygame.sprite.groupcollide.collide_rect(
-        # self.user_car_sprite, self.replay_sprites_group,)
-        # if collided:
-        # print(True)
-        self.test_car.pos = Vector2(50, 50)
+        # Controls what the car does based after a collision
+
+        pauseMenu()
 
     def events(self):
         # Handles quit event

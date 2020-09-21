@@ -21,7 +21,7 @@ class Test_Car(Car, pygame.sprite.Sprite):
         # Only need to deal with horizontal component since the game doesn't involve any trajectories
         self.vel = Vector2(0, 0)  # In ms^-1
         self.pos = Vector2(self.x_pos, self.y_pos)
-        self.max_vel = 15  # In ms^-1
+        self.max_vel = 20  # In ms^-1
         self.accel = 0.5  # In ms^-2
 
         # Decreases the length of my rectangle (hitbox) which allows for more accurate real time collision
