@@ -54,7 +54,7 @@ right_rectangle_image = pygame.transform.scale(
 
 car_sprite_raw = pygame.image.load(
     path+'/External Files/test_sprite.png').convert_alpha()
-car_sprite = pygame.transform.scale(car_sprite_raw, (100, 90))  # 30, 48
+car_sprite = pygame.transform.scale(car_sprite_raw, (35, 53))  # 30, 48
 enemy_car_sprite_raw = pygame.image.load(
     path+'/External Files/test_sprite_enemy.png').convert_alpha()
-enemy_sprite = pygame.transform.scale(enemy_car_sprite_raw, (100, 90))
+enemy_sprite = pygame.transform.scale(enemy_car_sprite_raw, (35, 53))

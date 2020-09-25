@@ -229,12 +229,11 @@ class Main:
         self.spawn_points_list = []
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
-        self.timer = 13.5  # SHOULD BE 10.5
+        self.timer = 10.5  # SHOULD BE 10.5
 
         self.turn_count = 1
         self.snapshots = []
         self.saved_replay = []
-        self.replay_car_count = 0
         self.dt = 0  # (Explained bellow when value is assigned to it)
 
         # Sprite Handling ----------------------------------------------------------------------#
@@ -251,6 +250,7 @@ class Main:
         # Misc  --------------------------------------------------------------------------------#
         self.true_scroll = [0, 0]
         self.screen_shake = 10
+        
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -317,9 +317,12 @@ class Main:
         # Transparent Rectangle Behind Turn Count/Timer/Healthbar
         GAME_DISPLAY.blit(left_rectangle_image, (0, 0))
         GAME_DISPLAY.blit(right_rectangle_image, (1080, -25))
+        
 
-        displayMessage(f"FPS: {int(self.clock.get_fps())}",
-                       WHITE, 20, (50, 100))
+        # displayMessage(f"FPS: {int(self.clock.get_fps())}",
+        #                WHITE, 20, (50, 100))
+        displayMessage(f"Health: {self.test_car.health}", RED, 35, (640, 10))
+        self.wallTeleport()
         displayMessage(f"Turn: {self.turn_count}", WHITE, 35, (24, 10))
 
         rotated_image = pygame.transform.rotate(
@@ -347,7 +350,7 @@ class Main:
         if self.timer < 0:
             # Removes the previous turns sprite from the group as it is becomes a 'replay' sprite
             self.test_car.removeFromSpriteList()
-            self.timer = 13.5  # Resets timer
+            self.timer = 10.5  # Resets timer
             self.saved_replay.append(self.snapshots)
             self.snapshots = []
             self.turn_count += 1
@@ -359,7 +362,9 @@ class Main:
         self.test_car.accelerate(self.dt)
         self.test_car.steering(self.dt)
         self.test_car.update()
-        self.wallTeleport()
+        
+        if self.test_car.health < 0:
+            pauseMenu()
 
         # Car Replay -----------------------------------------------------------------------#
         if self.turn_count > 1:
@@ -445,6 +450,12 @@ class Main:
             self.scroll[1] += randint(0, 8) - 4
             self.createMap(self.scroll[0], self.scroll[1])
             self.createTimer()
+
+            #Reduces Health
+            self.test_car.health -= 15
+            # self.handleCar()
+
+
             self.screen_shake -= 1
 
     def events(self):
