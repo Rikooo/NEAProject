@@ -8,6 +8,7 @@ from button import *
 from recources import *
 from testcar import *
 from replay import *
+from sprite import *
 
 pygame.init()
 
@@ -216,6 +217,70 @@ def pauseMenu():
         pygame.display.update()
 
 
+def gameOverMenu():
+    play_again_button = Button(
+        "Play again", NEON_GREEN, 60, 1030, 520, 160, 75)
+    main_menu_button = Button("Main Menu", NEON_GREEN, 60, 20, 520, 330, 75)
+    quit_button = Button("Quit", NEON_GREEN, 60, 1100, 0, 160, 75)
+
+    running = True
+    while running:
+        # Fill Background
+        GAME_DISPLAY.fill((134, 117, 169))
+        # Draws Each button to the screen
+        play_again_button.draw(GAME_DISPLAY)
+        main_menu_button.draw(GAME_DISPLAY)
+        quit_button.draw(GAME_DISPLAY)
+
+        with open(path_2+'/currentscore.txt', 'r') as f:
+            current_score = f.read()
+
+        with open(path_2+'/highscore.txt', 'r') as f:
+            high_score = f.read()
+
+        # Game over messages
+        displayMessage("GAME OVER", RED, 100, (380, 50))
+        pygame.draw.rect(GAME_DISPLAY, SALMON, (360, 150, 560, 5))
+        displayMessage(
+            f"Score: {current_score}", BEIGE, 70, (523, 230))
+        displayMessage(
+            f"High Score: {high_score}", YELLOW, 70, (435, 320))
+
+        for event in pygame.event.get():
+           # Get's position of mouse to detect collisions
+            pos = pygame.mouse.get_pos()
+            # Handles quit event
+            if event.type == pygame.QUIT:
+                pygame.display.quit()
+                pygame.quit()
+
+            if event.type == pygame.MOUSEMOTION:
+                # Adds responsiveness to text whewn hovering your mouse over it
+                if play_again_button.mouseOver(pos):
+                    play_again_button.text_colour, play_again_button.text_size = ORANGE, 70
+                elif main_menu_button.mouseOver(pos):
+                    main_menu_button.text_colour, main_menu_button.text_size = ORANGE, 70
+                elif quit_button.mouseOver(pos):
+                    quit_button.text_colour, quit_button.text_size = ORANGE, 70
+                else:
+                    play_again_button.text_colour, play_again_button.text_size = NEON_GREEN, 60
+                    main_menu_button.text_colour, main_menu_button.text_size = NEON_GREEN, 60
+                    quit_button.text_colour, quit_button.text_size = NEON_GREEN, 60
+
+            # HANDLING --------------------------------------------------------------------#
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Handles what to do after the user clicks on the corresponding button
+                if play_again_button.mouseOver(pos):
+                    Main(initial_run=False)
+                elif main_menu_button.mouseOver(pos):
+                    mainMenu()
+                elif quit_button.mouseOver(pos):
+                    pygame.display.quit()
+                    pygame.quit()
+
+        pygame.display.update()
+
+
 class Main:
     """ Class controls the entire program """
 
@@ -244,13 +309,13 @@ class Main:
         pygame.display.set_caption('Do Not Crash!')
         pygame.display.set_icon(game_icon_image)
 
-        # Handle Replay ------------------------------------------------------------------------#
+        # Objects ------------------------------------------------------------------------------#
         self.replay_object = Replay(enemy_sprite)
+        self.lake_object = Sprite(lake_image)
 
         # Misc  --------------------------------------------------------------------------------#
         self.true_scroll = [0, 0]
         self.screen_shake = 10
-        
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -274,8 +339,6 @@ class Main:
             self.createMap()
             self.createTimer()
             self.handleCar()
-            # TEST============
-            # self.collision()
             self.saveSnapshot()
             self.events()
             self.update()
@@ -313,17 +376,27 @@ class Main:
         # x and y used to displace objects after for screen shake effect
         GAME_DISPLAY.blit(grass_image, (x, y))
         GAME_DISPLAY.blit(roads_image, (x, y))
+        GAME_DISPLAY.blit(house_image, (x, y))
+        GAME_DISPLAY.blit(tree_image, (x, y))
+        GAME_DISPLAY.blit(lake_image, (x, y))
 
         # Transparent Rectangle Behind Turn Count/Timer/Healthbar
         GAME_DISPLAY.blit(left_rectangle_image, (0, 0))
         GAME_DISPLAY.blit(right_rectangle_image, (1080, -25))
-        
+        GAME_DISPLAY.blit(middle_rectangle_image, (0, 0))
 
         # displayMessage(f"FPS: {int(self.clock.get_fps())}",
         #                WHITE, 20, (50, 100))
-        displayMessage(f"Health: {self.test_car.health}", RED, 35, (640, 10))
+        # displayMessage(f"Health: {self.test_car.health}", RED, 35, (640, 10))
+
         self.wallTeleport()
+
         displayMessage(f"Turn: {self.turn_count}", WHITE, 35, (24, 10))
+
+        # Health Bar
+        GAME_DISPLAY.blit(red_healthbar_image, (0, 0))
+        for health in range(self.test_car.health):
+            GAME_DISPLAY.blit(green_health_image, (health+459, 11))
 
         rotated_image = pygame.transform.rotate(
             self.test_car.image, self.test_car.angle)
@@ -362,13 +435,46 @@ class Main:
         self.test_car.accelerate(self.dt)
         self.test_car.steering(self.dt)
         self.test_car.update()
-        
+
         if self.test_car.health < 0:
-            pauseMenu()
+            self.saveScore()
+            gameOverMenu()
 
         # Car Replay -----------------------------------------------------------------------#
         if self.turn_count > 1:
             self.displayReplays()
+
+        # Car Collision With Objects--------------------------------------------------------#
+        # Blits Hitboxes around objects
+        # tree_rects = [pygame.draw.rect(GAME_DISPLAY, BLACK, trees_rects_list[i], 2)
+        #               for i in range(len(trees_rects_list))]
+        # house_rects = [pygame.draw.rect(GAME_DISPLAY, BLACK, house_rects_list[i], 2)
+        #                for i in range(len(house_rects_list))]
+
+        house_rects = [house_rects_list[i]
+                       for i in range(len(house_rects_list))]
+        tree_rects = [trees_rects_list[i]
+                      for i in range(len(trees_rects_list))]
+
+        # Collision with car and house/tree
+        for i in range(len(house_rects)):
+            for x in range(len(tree_rects)):
+
+                if self.test_car.rect.colliderect(house_rects[i]) or self.test_car.rect.colliderect(tree_rects[x]):
+                    self.screen_shake = 10
+                    self.collision()
+
+        # Draws Mask around lake
+        # for point in self.lake_object.mask_outline:
+        #     self.lake_object.mask_outline[0] = (point[0], point[1])
+        # pygame.draw.polygon(GAME_DISPLAY, (0, 0, 0),
+        #                     self.lake_object.mask_outline, 3)
+
+        # Collision with lake
+        for b_rect in self.lake_object.bounding_rects:
+            if b_rect.contains(self.test_car):
+                self.saveScore()
+                gameOverMenu()
 
         # Testing -------------------------------------------------------------------------#
         # displayMessage(
@@ -407,11 +513,10 @@ class Main:
                 if self.saved_replay[i][j]['time'] > self.timer and self.saved_replay[i][j]['time'] < self.timer+0.04:
                     pos = pygame.Vector2(x_pos, y_pos)
                     self.replay_object.pos = pos
-                    replay_hitbox = self.replay_object.rect
 
                     # Draws the hitbox around the replay cars
                     self.replay_object.update()
-                    # pygame.draw.rect(GAME_DISPLAY, BLACK, replay_hitbox, 2)
+                    # pygame.draw.rect(GAME_DISPLAY, BLACK, self.replay_object.rect, 2)
                     self.replay_sprites_group.add(self.replay_object)
 
                     if self.replay_object.isCollided(self.test_car):
@@ -444,18 +549,34 @@ class Main:
         if car_hitbox[1] + car_hitbox[3] < 0:
             self.test_car.pos.y = DISPLAY_HEIGHT
 
+    def saveScore(self):
+        # Saves the score/highscore to be read by game over menu
+
+        # Save current score
+        with open(path_2+'/currentscore.txt', 'w') as f:
+            f.write(str(self.turn_count))
+
+        # Checks to update highscore if needed
+        try:
+            with open(path_2+'/highscore.txt', 'r') as f:
+                high_score = f.read()
+                if self.turn_count > int(high_score):
+                    with open(path_2+'/highscore.txt', 'w') as e:
+                        e.write(str(self.turn_count))
+        except ValueError:
+            pass
+
     def collision(self):
+        # Plays Shake Animation after Collision
+
         if self.screen_shake > 0:
             self.scroll[0] += randint(0, 8) - 4
             self.scroll[1] += randint(0, 8) - 4
             self.createMap(self.scroll[0], self.scroll[1])
             self.createTimer()
 
-            #Reduces Health
-            self.test_car.health -= 15
-            # self.handleCar()
-
-
+            # Reduces Health
+            self.test_car.health -= 40
             self.screen_shake -= 1
 
     def events(self):

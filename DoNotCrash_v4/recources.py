@@ -15,6 +15,9 @@ WHITE = (240, 240, 240)
 BLACK = (0, 0, 0)
 GREY = (192, 192, 192)
 RED = (190, 30, 50)
+BEIGE = (255, 213, 205)
+SALMON = (239, 187, 207)
+YELLOW = (255, 213, 126)
 TRANSPARENT = (0, 0, 0, 0)
 
 
@@ -35,14 +38,24 @@ arrow_left_image = pygame.image.load(
 arrow_right_image = pygame.image.load(
     path+'/External Files/arrow_right_image.png').convert_alpha()
 
+# Map ----------------------------------------------------------------------------------#
 # 1280x720
 grass_image = pygame.image.load(
     path+'/External Files/grass_image.png').convert_alpha()
 # 1280x720
 roads_image = pygame.image.load(
     path+'/External Files/roads.png').convert_alpha()
+# 1280x720
+lake_image = pygame.image.load(path+'/External Files/lake.png').convert_alpha()
+# 1280x720
+house_image = pygame.image.load(
+    path+'/External Files/house.png').convert_alpha()
+# 1280x720
+tree_image = pygame.image.load(path+'/External Files/tree.png').convert_alpha()
 
-
+# Rectangles ---------------------------------------------------------------------------#
+middle_rectangle_image = pygame.image.load(
+    path+'/External Files/rectangle.png').convert_alpha()
 left_rectangle_image_raw = pygame.image.load(
     path+'/External Files/left_rectangle_image.png').convert_alpha()
 left_rectangle_image = pygame.transform.scale(
@@ -52,9 +65,30 @@ right_rectangle_image_raw = pygame.image.load(
 right_rectangle_image = pygame.transform.scale(
     right_rectangle_image_raw, (250, 80))
 
+# Cars ---------------------------------------------------------------------------------#
 car_sprite_raw = pygame.image.load(
     path+'/External Files/test_sprite.png').convert_alpha()
-car_sprite = pygame.transform.scale(car_sprite_raw, (35, 53))  # 30, 48
+car_sprite = pygame.transform.scale(car_sprite_raw, (40, 58))  # 30, 48
 enemy_car_sprite_raw = pygame.image.load(
     path+'/External Files/test_sprite_enemy.png').convert_alpha()
-enemy_sprite = pygame.transform.scale(enemy_car_sprite_raw, (35, 53))
+enemy_sprite = pygame.transform.scale(enemy_car_sprite_raw, (40, 58))
+
+# Rectangle Definition -----------------------------------------------------------------#
+house_rects_list = [(1040, 570, 100, 100),
+                    (1040, 425, 100, 100),
+                    (250, 440, 100, 100),
+                    (250, 615, 100, 100),
+                    (1165, 295, 100, 100),
+                    (1165, 50, 100, 100)]
+trees_rects_list = [(175, 200, 65, 65),
+                    (480, 200, 65, 65),
+                    (1175, 450, 65, 65),
+                    (1175, 575, 65, 65)]
+
+# Health Bar ---------------------------------------------------------------------------#
+# 1280x720
+red_healthbar_image = pygame.image.load(
+    path+'/External Files/red_healthbar.png').convert_alpha()
+# 171x25
+green_health_image = pygame.image.load(
+    path+'/External Files/green_health.png').convert_alpha()
