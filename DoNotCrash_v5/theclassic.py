@@ -7,7 +7,7 @@ from car import *
 class The_Classic(Car, pygame.sprite.Sprite):
     """Test class to get the basic functionality of the car working"""
 
-    def __init__(self, image, x_pos=500, y_pos=0, angle=90):
+    def __init__(self, image, x_pos=500, y_pos=0, angle=90, health=200):
         # Sprite Functionality
         pygame.sprite.Sprite.__init__(self)
         self.image = image
@@ -32,7 +32,7 @@ class The_Classic(Car, pygame.sprite.Sprite):
         # self.mask_outline = self.mask.outline()
 
         # Health
-        self.health = 200
+        self.health = health
 
     def accelerate(self, dt):  # dt argument passed in from main.py
         """ Accelerates Car from  0 to max_vel """

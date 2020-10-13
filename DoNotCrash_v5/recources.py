@@ -71,6 +71,8 @@ car_outline_selected_image_raw = pygame.image.load(
     path+'/External Files/rectangle_blue.png').convert_alpha()
 car_outline_selected_image = pygame.transform.scale(
     car_outline_selected_image_raw, (350, 450))
+powerup_rectangle_image = pygame.transform.scale(
+    middle_rectangle_image, (200, 1500))
 
 # Cars ---------------------------------------------------------------------------------#
 # Test  Car
@@ -118,6 +120,8 @@ reverse_replay_powerup_image = pygame.image.load(
     path+'/External Files/reverse_replay_powerup.png').convert_alpha()
 show_route_powerup_image = pygame.image.load(
     path+'/External Files/show_route_powerup.png').convert_alpha()
+shield_image = pygame.image.load(
+    path+'/External Files/shield.png').convert_alpha()
 
 # Spawn Locations
 power_up_recs = [[1200, 200, 50, 50],

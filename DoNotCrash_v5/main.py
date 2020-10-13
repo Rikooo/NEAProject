@@ -10,7 +10,6 @@ from testcar import *
 from theclassic import *
 from thedestroyer import *
 from replay import *
-from powerup import *
 from sprite import *
 
 pygame.init()
@@ -356,6 +355,7 @@ class Main:
 
         # Slightly above 'n' to allow the user to react to the timer before counting down
         self.timer = 10.5  # SHOULD BE 10.5
+        self.powerup_timer = 3.5  # How Long a power up lasts
 
         self.turn_count = 1
         self.snapshots = []
@@ -385,8 +385,24 @@ class Main:
         # Misc  --------------------------------------------------------------------------------#
         self.true_scroll = [0, 0]
         self.screen_shake = 10
+        self.player_health = 200
 
-        self.test_run = True
+        # Power Up Handling --------------------------------------------------------------------#
+        self.health_collected = False
+        self.speedeup_collected = False
+        self.slowdown_collected = False
+        self.shield_collected = False
+        self.reverse_collected = False
+        self.route_collected = False
+
+        self.speedup_activated = False
+        self.slowdown_activated = False
+        self.shield_activated = False
+        self.reverse_activated = False
+        self.route_actived = False
+
+        self.place_powerup = True
+        self.powerup_collided = False
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -412,12 +428,15 @@ class Main:
             self.handleCar()
             self.saveSnapshot()
 
-            if self.test_run:
+            # Checks if the turn count is 5 to display powerup
+            if self.place_powerup and self.turn_count % 1 == 0:
+                loc = randint(0, 2)
                 powerup_choice = randint(0, len(list_of_powerups)-1)
-                self.test_run = False
-            self.powerUp(2, powerup_choice)
+                self.place_powerup = False
+            self.powerUp(loc, 3)
 
             self.drawHealthBar()
+            self.showPowerUp()
             self.events()
             self.update()
 
@@ -435,6 +454,7 @@ class Main:
             index = randint(0, len(self.spawn_points_list)-1)
             new_spawn_location = self.spawn_points_list[index]
             # Avoids respawning in the same location by deleting the used spawn location index
+
             if self.car_choice == 1:
                 self.car = The_Classic(
                     the_classic_sprite, new_spawn_location[0], new_spawn_location[1], new_spawn_location[2])
@@ -478,13 +498,7 @@ class Main:
         # displayMessage(f"Health: {self.car.health}", RED, 35, (640, 10))
 
         self.wallTeleport()
-
         displayMessage(f"Turn: {self.turn_count}", WHITE, 35, (24, 10))
-
-        # Health Bar
-        # GAME_DISPLAY.blit(red_healthbar_image, (0, 0))
-        # for health in range(self.car.health):
-        #     GAME_DISPLAY.blit(green_health_image, (health+459, 11))
 
         # Car
         rotated_image = pygame.transform.rotate(
@@ -512,6 +526,8 @@ class Main:
         if self.timer < 0:
             # Removes the previous turns sprite from the group as it is becomes a 'replay' sprite
             self.car.removeFromSpriteList()
+            self.place_powerup = True
+            self.powerup_collided = False
             self.timer = 10.5  # Resets timer
             self.saved_replay.append(self.snapshots)
             self.snapshots = []
@@ -525,7 +541,7 @@ class Main:
         self.car.steering(self.dt)
         self.car.update()
 
-        if self.car.health < 0:
+        if self.player_health < 0:
             self.saveScore()
             gameOverMenu()
 
@@ -534,11 +550,6 @@ class Main:
             self.displayReplays()
 
         # Power Up -------------------------------------------------------------------------#
-        # Checks if the turn count is 5 to display powerup
-        if self.turn_count % 5 == 0:
-            loc = randint(0, 2)
-            powerup_choice = randint(0, len(list_of_powerups)-1)
-            self.powerUp(loc, powerup_choice)
 
         # Car Collision With Objects--------------------------------------------------------#
         # Blits Hitboxes around objects
@@ -566,11 +577,52 @@ class Main:
         # pygame.draw.polygon(GAME_DISPLAY, (0, 0, 0),
         #                     self.lake_object.mask_outline, 3)
 
-        # Collision with lake
-        for b_rect in self.lake_object.bounding_rects:
-            if b_rect.contains(self.car):
-                self.saveScore()
-                gameOverMenu()
+        # Collision with lake unless shield powerup is activated
+        if self.shield_activated:
+            pass
+        else:
+            for b_rect in self.lake_object.bounding_rects:
+                if b_rect.contains(self.car):
+                    self.saveScore()
+                    gameOverMenu()
+
+        key = pygame.key.get_pressed()
+        if key[pygame.K_SPACE]:
+
+            if self.health_collected:
+                self.healthPowerUp()
+                self.health_collected = False
+
+            elif self.speedeup_collected:
+                self.speedup_activated = True
+                self.powerup_timer = 3.5
+                self.speedeup_collected = False
+
+            elif self.slowdown_collected:
+
+                self.slowdown_activated = True
+                self.powerup_timer = 3.5
+                self.slowdown_collected = False
+
+            elif self.shield_collected:
+                self.shield_activated = True
+                self.powerup_timer = 3.5
+                self.shield_collected = False
+
+            elif self.reverse_collected:
+                self.reversePowerUp()
+                self.reverse_collected = False
+
+            elif self.route_collected:
+                self.routePowerUp()
+                self.route_collected = False
+
+        if self.speedup_activated:
+            self.speedupPowerUp()
+        elif self.slowdown_activated:
+            self.slowdownPowerUp()
+        elif self.shield_activated:
+            self.shieldPowerUp()
 
         # Testing -------------------------------------------------------------------------#
         # displayMessage(
@@ -661,24 +713,108 @@ class Main:
         # [4] = reverse
         # [5] = route
 
-        GAME_DISPLAY.blit(
-            list_of_powerups[powerup_choice], (power_up_recs[loc][0], power_up_recs[loc][1]))
+        # Only Blits the powerup if it hasn't been collected
+        if not self.powerup_collided:
+            GAME_DISPLAY.blit(
+                list_of_powerups[powerup_choice], (power_up_recs[loc][0], power_up_recs[loc][1]))
 
-        powerup_object = Powerup
+        # Handles each power up after collision
         if self.car.rect.colliderect(power_up_recs[loc]):
 
+            # Heart
             if powerup_choice == 0:
-                print("0")
+                self.powerup_collided = True
+                self.health_collected = True
+
+            # Speedup
             elif powerup_choice == 1:
-                print("1")
+                self.powerup_collided = True
+                self.speedeup_collected = True
+
+            # Slowdown
             elif powerup_choice == 2:
-                print("2")
+                self.powerup_collided = True
+                self.slowdown_collected = True
+
+            # Shield
             elif powerup_choice == 3:
-                print("3")
+                self.powerup_collided = True
+                self.shield_collected = True
+
+            # Reverse
             elif powerup_choice == 4:
-                print("4")
+                self.powerup_collided = True
+                self.reverse_collected = True
+
+            # Route
             elif powerup_choice == 5:
-                print("5")
+                self.powerup_collided = True
+                self.route_collected = True
+
+    def healthPowerUp(self):
+        self.player_health = 200
+        print("0")
+
+    def speedupPowerUp(self):
+
+        if self.powerup_timer < 3.6:
+            displayMessage(
+                f"Time: {int(self.powerup_timer)}", YELLOW, 35, (200, 10))
+            self.car.max_vel = 25
+            self.car.vel.x = 25
+
+        dt = self.dt / 10
+        self.powerup_timer -= dt
+
+        if self.powerup_timer <= 0:
+            if self.car_choice == 1:
+                self.car.vel.x = 18
+                self.car.max_vel = 18
+                self.speedup_activated = False
+            elif self.car_choice == 2:
+                self.car.vel.x = 14
+                self.car.max_vel = 14
+                self.speedup_activated = False
+
+    def slowdownPowerUp(self):
+        if self.powerup_timer < 3.6:
+            displayMessage(
+                f"Time: {int(self.powerup_timer)}", YELLOW, 35, (200, 10))
+            self.car.max_vel = 10
+            self.car.vel.x = 10
+
+        dt = self.dt / 10
+        self.powerup_timer -= dt
+
+        if self.powerup_timer <= 0:
+            if self.car_choice == 1:
+                self.car.vel.x = 18
+                self.car.max_vel = 18
+                self.slowdown_activated = False
+            elif self.car_choice == 2:
+                self.car.vel.x = 14
+                self.car.max_vel = 14
+                self.slowdown_activated = False
+
+    def shieldPowerUp(self):
+        if self.powerup_timer < 3.6:
+            displayMessage(
+                f"Time: {int(self.powerup_timer)}", YELLOW, 35, (200, 10))
+
+            GAME_DISPLAY.blit(
+                shield_image, (self.car.rect.x-20, self.car.rect.y-20))
+
+        dt = self.dt / 10
+        self.powerup_timer -= dt
+
+        if self.powerup_timer <= 0:
+            self.shield_activated = False
+
+    def reversePowerUp(self):
+        print("4")
+
+    def routePowerUp(self):
+        print("5")
 
     def saveScore(self):
         # Saves the score/highscore to be read by game over menu
@@ -698,29 +834,50 @@ class Main:
             pass
 
     def collision(self):
-        # Plays Shake Animation after Collision
+        # Plays Shake Animation after Collision unless shield powerup is activated
 
-        if self.screen_shake > 0:
-            self.scroll[0] += randint(0, 8) - 4
-            self.scroll[1] += randint(0, 8) - 4
-            self.createMap(self.scroll[0], self.scroll[1])
-            self.createTimer()
+        if self.shield_activated:
+            pass
+        else:
+            if self.screen_shake > 0:
+                self.scroll[0] += randint(0, 8) - 4
+                self.scroll[1] += randint(0, 8) - 4
+                self.createMap(self.scroll[0], self.scroll[1])
+                self.createTimer()
 
-            # Reduces Health
-            if self.car_choice == 1:
-                self.car.health -= 30
-            elif self.car_choice == 2:
-                self.car.health -= 20
+                # Reduces Health
+                if self.car_choice == 1:
+                    self.car.health -= 30
+                    self.player_health = self.car.health
+                elif self.car_choice == 2:
+                    self.car.health -= 20
+                    self.player_health = self.car.health
 
-            self.screen_shake -= 1
+                self.screen_shake -= 1
 
     def drawHealthBar(self):
 
         # Health Bar
         GAME_DISPLAY.blit(middle_rectangle_image, (0, 0))
         GAME_DISPLAY.blit(red_healthbar_image, (0, 0))
-        for health in range(self.car.health):
+        for health in range(self.player_health):
             GAME_DISPLAY.blit(green_health_image, (health+459, 11))
+
+    def showPowerUp(self):
+
+        GAME_DISPLAY.blit(powerup_rectangle_image, (-70, 600))
+        if self.health_collected:
+            GAME_DISPLAY.blit(heart_powerup_image, (7, 620))
+        elif self.speedeup_collected:
+            GAME_DISPLAY.blit(speedup_powerup_image, (7, 620))
+        elif self.slowdown_collected:
+            GAME_DISPLAY.blit(slowdown_powerup_image, (7, 620))
+        elif self.shield_collected:
+            GAME_DISPLAY.blit(shield_powerup_image, (7, 620))
+        elif self.reverse_collected:
+            GAME_DISPLAY.blit(reverse_replay_powerup_image, (7, 620))
+        elif self.route_collected:
+            GAME_DISPLAY.blit(show_route_powerup_image, (7, 620))
 
     def events(self):
         # Handles quit event
