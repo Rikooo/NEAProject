@@ -122,6 +122,8 @@ show_route_powerup_image = pygame.image.load(
     path+'/External Files/show_route_powerup.png').convert_alpha()
 shield_image = pygame.image.load(
     path+'/External Files/shield.png').convert_alpha()
+show_route_image = pygame.image.load(
+    path+'/External Files/show_route_on_map.png').convert_alpha()
 
 # Spawn Locations
 power_up_recs = [[1200, 200, 50, 50],
@@ -155,3 +157,7 @@ red_healthbar_image = pygame.image.load(
 # 171x25
 green_health_image = pygame.image.load(
     path+'/External Files/green_health.png').convert_alpha()
+
+# Music
+pygame.mixer.music.load(
+    path+'/External Files/do_not_crash_bg_music.wav')

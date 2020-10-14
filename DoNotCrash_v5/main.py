@@ -370,6 +370,9 @@ class Main:
         pygame.display.set_caption('Do Not Crash!')
         pygame.display.set_icon(game_icon_image)
 
+        # Music
+        pygame.mixer.music.play(-1)  # Plays BG song on repeat
+
         # Objects ------------------------------------------------------------------------------#
         if car_choice == 1:
             self.replay_object = Replay(the_classic_ghost_sprite)
@@ -403,6 +406,7 @@ class Main:
 
         self.place_powerup = True
         self.powerup_collided = False
+        self.replay_reverse = False
 
         # Runs Main Methods --------------------------------------------------------------------#
         self.running = True
@@ -433,10 +437,11 @@ class Main:
                 loc = randint(0, 2)
                 powerup_choice = randint(0, len(list_of_powerups)-1)
                 self.place_powerup = False
-            self.powerUp(loc, 3)
+            self.powerUp(loc, powerup_choice)
 
             self.drawHealthBar()
             self.showPowerUp()
+            # self.playMusic()
             self.events()
             self.update()
 
@@ -547,7 +552,10 @@ class Main:
 
         # Car Replay -----------------------------------------------------------------------#
         if self.turn_count > 1:
-            self.displayReplays()
+            if self.replay_reverse:
+                self.displayReplays(reverse=True)
+            else:
+                self.displayReplays()
 
         # Power Up -------------------------------------------------------------------------#
 
@@ -610,11 +618,13 @@ class Main:
                 self.shield_collected = False
 
             elif self.reverse_collected:
-                self.reversePowerUp()
+                self.reverse_activated = True
+                self.powerup_timer = 3.5
                 self.reverse_collected = False
 
             elif self.route_collected:
-                self.routePowerUp()
+                self.route_actived = True
+                self.powerup_timer = 3.5
                 self.route_collected = False
 
         if self.speedup_activated:
@@ -623,6 +633,10 @@ class Main:
             self.slowdownPowerUp()
         elif self.shield_activated:
             self.shieldPowerUp()
+        elif self.reverse_activated:
+            self.reversePowerUp()
+        elif self.route_actived:
+            self.routePowerUp()
 
         # Testing -------------------------------------------------------------------------#
         # displayMessage(
@@ -646,40 +660,76 @@ class Main:
                        'angle': self.car.angle}
         self.snapshots.append(data_points)
 
-    def displayReplays(self):
+    def displayReplays(self, reverse=False):
         # Handles everything replay related
 
-        # Starts with the first dictionary element in the snapshot list and iterates through  everything
-        for i in range(len(self.saved_replay)):
-            for j in range(len(self.saved_replay[i])):
+        if not reverse:
+            # Starts with the first dictionary element in the snapshot list and iterates through  everything
+            for i in range(len(self.saved_replay)):
+                for j in range(len(self.saved_replay[i])):
 
-                x_pos = self.saved_replay[i][j]['position'][0]
-                y_pos = self.saved_replay[i][j]['position'][1]
-                angle = self.saved_replay[i][j]['angle']
+                    x_pos = self.saved_replay[i][j]['position'][0]
+                    y_pos = self.saved_replay[i][j]['position'][1]
+                    angle = self.saved_replay[i][j]['angle']
 
-                # Synchronises the current time with the replay time to display the replay in real time wuth a varience of ~0.04
-                if self.saved_replay[i][j]['time'] > self.timer and self.saved_replay[i][j]['time'] < self.timer+0.04:
-                    pos = pygame.Vector2(x_pos, y_pos)
-                    self.replay_object.pos = pos
+                    # Synchronises the current time with the replay time to display the replay in real time wuth a varience of ~0.04
 
-                    # Draws the hitbox around the replay cars
-                    self.replay_object.update()
-                    # pygame.draw .rect(GAME_DISPLAY, BLACK,
-                    #                   self.replay_object.rect, 2)
-                    self.replay_sprites_group.add(self.replay_object)
+                    if self.saved_replay[i][j]['time'] > self.timer and self.saved_replay[i][j]['time'] < self.timer+0.04:
+                        pos = pygame.Vector2(x_pos, y_pos)
+                        self.replay_object.pos = pos
 
-                    if self.replay_object.isCollided(self.car):
-                        # Screen Shake animation to show collision
-                        self.screen_shake = 10
-                        self.collision()
+                        # Draws the hitbox around the replay cars
+                        self.replay_object.update()
+                        # pygame.draw .rect(GAME_DISPLAY, BLACK,
+                        #                   self.replay_object.rect, 2)
+                        self.replay_sprites_group.add(self.replay_object)
 
-                    # Blits the Car to the screen
-                    rotated_image = pygame.transform.rotate(
-                        self.replay_object.image, angle)
-                    GAME_DISPLAY.blit(rotated_image, pos -
-                                      (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
-                    # breaks out before it can blit more than 1 car in the replay
-                    break
+                        if self.replay_object.isCollided(self.car):
+                            # Screen Shake animation to show collision
+                            self.screen_shake = 10
+                            self.collision()
+
+                        # Blits the Car to the screen
+                        rotated_image = pygame.transform.rotate(
+                            self.replay_object.image, angle)
+                        GAME_DISPLAY.blit(rotated_image, pos -
+                                          (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
+                        # breaks out before it can blit more than 1 car in the replay
+                        break
+
+        else:
+            # Starts with the first dictionary element in the snapshot list and iterates through  everything
+            for i in range(len(self.saved_replay)):
+                for j in range(len(self.saved_replay[i])):
+
+                    x_pos = self.saved_replay[i][-j]['position'][0]
+                    y_pos = self.saved_replay[i][-j]['position'][1]
+                    angle = self.saved_replay[i][-j]['angle']
+
+                    # Synchronises the current time with the replay time to display the replay in real time wuth a varience of ~0.04
+
+                    if self.saved_replay[i][j]['time'] > self.timer and self.saved_replay[i][j]['time'] < self.timer+0.04:
+                        pos = pygame.Vector2(x_pos, y_pos)
+                        self.replay_object.pos = pos
+
+                        # Draws the hitbox around the replay cars
+                        self.replay_object.update()
+                        # pygame.draw .rect(GAME_DISPLAY, BLACK,
+                        #                   self.replay_object.rect, 2)
+                        self.replay_sprites_group.add(self.replay_object)
+
+                        if self.replay_object.isCollided(self.car):
+                            # Screen Shake animation to show collision
+                            self.screen_shake = 10
+                            self.collision()
+
+                        # Blits the Car to the screen
+                        rotated_image = pygame.transform.rotate(
+                            self.replay_object.image, angle)
+                        GAME_DISPLAY.blit(rotated_image, pos -
+                                          (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
+                        # breaks out before it can blit more than 1 car in the replay
+                        break
 
     def wallTeleport(self):
         # Places the user on the opposite side of the map when leaving to give them more options for routes
@@ -797,6 +847,7 @@ class Main:
                 self.slowdown_activated = False
 
     def shieldPowerUp(self):
+
         if self.powerup_timer < 3.6:
             displayMessage(
                 f"Time: {int(self.powerup_timer)}", YELLOW, 35, (200, 10))
@@ -811,10 +862,45 @@ class Main:
             self.shield_activated = False
 
     def reversePowerUp(self):
-        print("4")
+
+        if self.powerup_timer < 3.6:
+            displayMessage(
+                f"Time: {int(self.powerup_timer)}", YELLOW, 35, (200, 10))
+
+            self.replay_reverse = True
+
+        dt = self.dt / 10
+        self.powerup_timer -= dt
+
+        if self.powerup_timer <= 0:
+            self.replay_reverse = False
+            self.reverse_activated = False
 
     def routePowerUp(self):
-        print("5")
+
+        if self.powerup_timer < 3.6:
+            displayMessage(
+                f"Time: {int(self.powerup_timer)}", YELLOW, 35, (200, 10))
+
+            for i in range(len(self.saved_replay)):
+                for j in range(len(self.saved_replay[i])):
+
+                    x_pos = self.saved_replay[i][j]['position'][0]
+                    y_pos = self.saved_replay[i][j]['position'][1]
+                    angle = self.saved_replay[i][j]['angle']
+
+                    pos = pygame.Vector2(x_pos, y_pos)
+
+                    rotated_image = pygame.transform.rotate(
+                        show_route_image, angle)
+                    GAME_DISPLAY.blit(rotated_image, pos -
+                                      (rotated_image.get_width() / 2, rotated_image.get_height() / 2))
+
+        dt = self.dt / 10
+        self.powerup_timer -= dt
+
+        if self.powerup_timer <= 0:
+            self.route_actived = False
 
     def saveScore(self):
         # Saves the score/highscore to be read by game over menu
@@ -837,6 +923,7 @@ class Main:
         # Plays Shake Animation after Collision unless shield powerup is activated
 
         if self.shield_activated:
+            # Ignore collisions if the shield is activated
             pass
         else:
             if self.screen_shake > 0:
@@ -878,6 +965,10 @@ class Main:
             GAME_DISPLAY.blit(reverse_replay_powerup_image, (7, 620))
         elif self.route_collected:
             GAME_DISPLAY.blit(show_route_powerup_image, (7, 620))
+
+    # def playMusic(self):
+
+    #     pygame.mixer.music.play(-1)  # Plays BG song on repeat
 
     def events(self):
         # Handles quit event
