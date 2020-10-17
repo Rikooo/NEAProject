@@ -19,6 +19,7 @@ RED = (190, 30, 50)
 BEIGE = (255, 213, 205)
 SALMON = (239, 187, 207)
 YELLOW = (255, 213, 126)
+NAVY = (0, 88, 122)
 TRANSPARENT = (0, 0, 0, 0)
 
 
@@ -158,6 +159,30 @@ red_healthbar_image = pygame.image.load(
 green_health_image = pygame.image.load(
     path+'/External Files/green_health.png').convert_alpha()
 
+# Controls
+car_control_image = pygame.image.load(
+    path+'/External Files/car_controls.png').convert_alpha()
+a_key_image = pygame.image.load(
+    path+'/External Files/a_key.png').convert_alpha()
+d_key_image = pygame.image.load(
+    path+'/External Files/d_key.png').convert_alpha()
+left_key_image = pygame.image.load(
+    path+'/External Files/left_key.png').convert_alpha()
+right_key_image = pygame.image.load(
+    path+'/External Files/right_key.png').convert_alpha()
+space_key_image = pygame.image.load(
+    path+'/External Files/space_key.png').convert_alpha()
+
 # Music
 pygame.mixer.music.load(
     path+'/External Files/do_not_crash_bg_music.wav')
+crash_fx = pygame.mixer.Sound(path+'/External Files/crash_fx.wav')
+
+
+# Options Menu
+# 30x30
+left_arrow_options_image = pygame.image.load(
+    path+'/External Files/left_arrow_options.png').convert_alpha()
+# 30x30
+right_arrow_options_image = pygame.image.load(
+    path+'/External Files/right_arrow_options.png').convert_alpha()

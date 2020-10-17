@@ -32,7 +32,7 @@ def displayMessage(text, text_colour, text_size, coords):
 
 
 # # Menu Systems ----------------------------------------------------------------------------#
-def mainMenu():
+def mainMenu(music_volume=1.0, fx_volume=0.5):
     # Individual Menu Buttons                   #Size   x   y  width height
     play_game_button = Button("PLAY GAME", ORANGE, 90, 50, 100, 460, 75)
     choose_car_button = Button("CHOOSE CAR", ORANGE, 75, 80, 220, 400, 65)
@@ -85,11 +85,12 @@ def mainMenu():
                     # This avoids the current state of whatever menu system overriding the intended menu
                     # For example before this, when the user would pause the game and exit to main menu then click play game,
                     # They would immidiately arrive at the pause screen an not the actual game hence the use of a default parameter
-                    Main(initial_run=False)
+                    Main(initial_run=False, music_volume=music_volume,
+                         fx_volume=fx_volume)
                 elif choose_car_button.mouseOver(pos):
                     chooseCarMenu()
                 elif options_button.mouseOver(pos):
-                    pass
+                    optionMenu()
                 elif quit_button.mouseOver(pos):
                     pygame.display.quit()
                     pygame.quit()
@@ -196,7 +197,88 @@ def chooseCarMenu():
 
 
 def optionMenu():
-    pass
+
+    back_button = Button("Main Menu", ORANGE, 60, 20, 600, 330, 75)
+    left_arrow_button = Button("", BLACK, 0, 115, 163, 40, 40)
+    right_arrow_button = Button("", BLACK, 0, 451, 163, 40, 40)
+
+    volume_index = 9  # Max volume by default
+    volume = 1.0
+    fx_volume = 0.5
+
+    running = True
+    while running:
+
+        GAME_DISPLAY.fill((NAVY))
+        # Controls
+        GAME_DISPLAY.blit(car_control_image, (900, 30))
+        GAME_DISPLAY.blit(a_key_image, (950, 320))
+        GAME_DISPLAY.blit(d_key_image, (1050, 320))
+        GAME_DISPLAY.blit(left_key_image, (950, 420))
+        GAME_DISPLAY.blit(right_key_image, (1050, 420))
+        displayMessage("Powerup Activation:", ORANGE, 40, (880, 550))
+        GAME_DISPLAY.blit(space_key_image, (1000, 600))
+
+        # Volume Control
+        displayMessage("~- Volume -~", SALMON, 50, (155, 100))
+        dots_rects_list = [[160, 175, 15, 15],  # 0.1
+                           [190, 175, 15, 15],  # 0.2
+                           [220, 175, 15, 15],  # 0.3
+                           [250, 175, 15, 15],  # 0.4
+                           [280, 175, 15, 15],  # 0.5
+                           [310, 175, 15, 15],  # 0.6
+                           [340, 175, 15, 15],  # 0.7
+                           [370, 175, 15, 15],  # 0.8
+                           [400, 175, 15, 15],  # 0.9
+                           [430, 175, 15, 15]]  # 1.0
+
+        GAME_DISPLAY.blit(left_arrow_options_image, (120, 167))
+        GAME_DISPLAY.blit(right_arrow_options_image, (456, 167))
+        display_rects = [pygame.draw.rect(GAME_DISPLAY, WHITE, dots_rects_list[i])
+                         for i in range(len(dots_rects_list))]
+
+        try:
+            circle_x = dots_rects_list[volume_index][0] + 7
+            circle_y = dots_rects_list[volume_index][1] + 8
+        except IndexError:
+            # Encapsulates error when click the button when already on max volume
+            pass
+
+        pygame.draw.circle(GAME_DISPLAY, BLACK, (circle_x, circle_y), 18, 2)
+
+        back_button.draw(GAME_DISPLAY)
+        left_arrow_button.draw(GAME_DISPLAY)
+        right_arrow_button.draw(GAME_DISPLAY)
+
+        for event in pygame.event.get():
+            # Get's position of mouse to detect collisions
+            pos = pygame.mouse.get_pos()
+            # Handles quit event
+            if event.type == pygame.QUIT:
+                pygame.display.quit()
+                pygame.quit()
+
+            if event.type == pygame.MOUSEMOTION:
+                # Adds responsiveness to text whewn hovering your mouse over it
+                if back_button.mouseOver(pos):
+                    back_button.text_colour, back_button.text_size = NEON_GREEN, 70
+                else:
+                    back_button.text_colour, back_button.text_size = ORANGE, 60
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Handles what to do after the user clicks on the corresponding button
+                if back_button.mouseOver(pos):
+                    mainMenu(music_volume=volume, fx_volume=fx_volume)
+                elif left_arrow_button.mouseOver(pos):
+                    volume_index -= 1
+                    volume -= 0.1
+                    fx_volume -= 0.1
+                elif right_arrow_button.mouseOver(pos):
+                    volume_index += 1
+                    volume += 0.1
+                    fx_volume += 0.1
+
+        pygame.display.update()
 
 
 def pauseMenu():
@@ -341,7 +423,7 @@ def gameOverMenu():
 class Main:
     """ Class controls the entire program """
 
-    def __init__(self, initial_run=True, car_choice=1):
+    def __init__(self, initial_run=True, car_choice=1, music_volume=1, fx_volume=0.5):
         # Initialisations ----------------------------------------------------------------------#
         self.FPS = 60
         self.clock = pygame.time.Clock()
@@ -372,6 +454,10 @@ class Main:
 
         # Music
         pygame.mixer.music.play(-1)  # Plays BG song on repeat
+        pygame.mixer.music.set_volume(music_volume)
+        crash_fx.set_volume(fx_volume)
+        # print(crash_fx.get_volume())
+        # print(pygame.mixer.music.get_volume())
 
         # Objects ------------------------------------------------------------------------------#
         if car_choice == 1:
@@ -432,12 +518,20 @@ class Main:
             self.handleCar()
             self.saveSnapshot()
 
-            # Checks if the turn count is 5 to display powerup
-            if self.place_powerup and self.turn_count % 1 == 0:
+            # Checks if the turn count is a multiple of 4 to display powerup
+            if self.place_powerup and self.turn_count % 4 == 0:
                 loc = randint(0, 2)
                 powerup_choice = randint(0, len(list_of_powerups)-1)
+                self.no_powerup = False
                 self.place_powerup = False
-            self.powerUp(loc, powerup_choice)
+
+            elif self.turn_count % 4 != 0:
+                self.no_powerup = True
+
+            if self.no_powerup:
+                pass
+            else:
+                self.powerUp(loc, powerup_choice)
 
             self.drawHealthBar()
             self.showPowerUp()
@@ -929,6 +1023,7 @@ class Main:
             if self.screen_shake > 0:
                 self.scroll[0] += randint(0, 8) - 4
                 self.scroll[1] += randint(0, 8) - 4
+                crash_fx.play()
                 self.createMap(self.scroll[0], self.scroll[1])
                 self.createTimer()
 
