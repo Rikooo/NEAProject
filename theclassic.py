@@ -4,10 +4,10 @@ from pygame import Vector2
 from car import *
 
 
-class Test_Car(Car, pygame.sprite.Sprite):
+class The_Classic(Car, pygame.sprite.Sprite):
     """Test class to get the basic functionality of the car working"""
 
-    def __init__(self, image, x_pos=500, y_pos=0, angle=90):
+    def __init__(self, image, x_pos=500, y_pos=0, angle=90, health=200):
         # Sprite Functionality
         pygame.sprite.Sprite.__init__(self)
         self.image = image
@@ -26,7 +26,7 @@ class Test_Car(Car, pygame.sprite.Sprite):
 
         # Decreases the length of my rectangle (hitbox) which allows for more accurate real time collision
         self.rect = self.image.get_rect(center=self.pos)
-        self.rect = self.rect.inflate(0, -25)
+        self.rect = self.rect.inflate(0, 0)
 
         # self.mask = pygame.mask.from_surface(self.image)
         # self.mask_outline = self.mask.outline()
@@ -48,14 +48,14 @@ class Test_Car(Car, pygame.sprite.Sprite):
         """ Handles Turning support """
 
         car_length = self.image.get_width()
-        if self.turning > 20 or self.turning < -20:  # Stops the game from imploding when exceeding max turning angle
+        if self.turning > 20 or self.turning <  -20:  # Stops the game from imploding when exceeding max turning angle
             self.turning = 0
         try:
             # math.sin only accepts radians
             turning_rad = car_length / math.sin(math.radians(self.turning))
             angular_vel = self.vel.x / turning_rad
 
-            self.angle += math.degrees(angular_vel) * dt * 1.7
+            self.angle += math.degrees(angular_vel) * dt * 3
 
         except ZeroDivisionError:  # Prevents the game from breaking due to self.turning = 0 thus dividing by 0
             turning_rad = 0

@@ -1,16 +1,29 @@
-from main import *
-from car import *
-from recources import *
-
-
 import pygame
-from pygame import Vector2
-import os
-import math
 
 
-class Replay():
+class Replay(pygame.sprite.Sprite):
     """ Handles all the car replays """
 
-    def __init__(self, car_image, saved_replays):
-        self.car_image = image
+    def __init__(self, image, pos=None):
+        # Used to update replay ghost cars
+        pygame.sprite.Sprite.__init__(self)
+        self.image = image
+        self.pos = pygame.Vector2(0, 0)
+
+        self.rect = image.get_rect(center=self.pos)
+        self.rect = self.rect.inflate(0, 0)
+
+    def update(self):
+        """ Used to update the hitbox position for hitbox collision"""
+
+        self.rect.center = self.pos
+
+    def isCollided(self, sprite):
+        """Used to detect collision between the 2 objects """
+
+        return self.rect.colliderect(sprite.rect)
+
+    def removeFromSpriteList(self):
+        """Used to update sprite group"""
+
+        self.kill()

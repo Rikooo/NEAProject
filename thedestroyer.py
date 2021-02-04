@@ -4,7 +4,7 @@ from pygame import Vector2
 from car import *
 
 
-class Test_Car(Car, pygame.sprite.Sprite):
+class The_Destroyer(Car, pygame.sprite.Sprite):
     """Test class to get the basic functionality of the car working"""
 
     def __init__(self, image, x_pos=500, y_pos=0, angle=90):
@@ -21,12 +21,12 @@ class Test_Car(Car, pygame.sprite.Sprite):
         # Only need to deal with horizontal component since the game doesn't involve any trajectories
         self.vel = Vector2(0, 0)  # In ms^-1
         self.pos = Vector2(self.x_pos, self.y_pos)
-        self.max_vel = 18  # In ms^-1
+        self.max_vel = 14  # In ms^-1
         self.accel = 0.5  # In ms^-2
 
         # Decreases the length of my rectangle (hitbox) which allows for more accurate real time collision
         self.rect = self.image.get_rect(center=self.pos)
-        self.rect = self.rect.inflate(0, -25)
+        self.rect = self.rect.inflate(0, 0)
 
         # self.mask = pygame.mask.from_surface(self.image)
         # self.mask_outline = self.mask.outline()
@@ -55,7 +55,7 @@ class Test_Car(Car, pygame.sprite.Sprite):
             turning_rad = car_length / math.sin(math.radians(self.turning))
             angular_vel = self.vel.x / turning_rad
 
-            self.angle += math.degrees(angular_vel) * dt * 1.7
+            self.angle += math.degrees(angular_vel) * dt * 2.5
 
         except ZeroDivisionError:  # Prevents the game from breaking due to self.turning = 0 thus dividing by 0
             turning_rad = 0

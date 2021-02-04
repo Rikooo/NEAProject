@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class Car(ABC):
-    """ Abstract class for car since I'm dealing with more than one car this will be a vital blueprint """
+    """ Abstract base class for car  """
 
     @abstractmethod
     def accelerate(self):
